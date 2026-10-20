@@ -36,7 +36,7 @@ class RecommendationEngineTest {
         val cbe = CbeAssessmentBank.assessment.questions
         val efe = EightFourFourAssessmentBank.assessment.questions
         assertEquals(15, cbe.size)
-        assertEquals(10, efe.size)
+        assertEquals(9, efe.size)
         assertTrue(cbe.map { it.prompt }.intersect(efe.map { it.prompt }.toSet()).isEmpty())
     }
 

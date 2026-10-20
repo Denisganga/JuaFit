@@ -2,6 +2,8 @@ package com.pathwayfit.app.ui.efe
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -21,12 +23,15 @@ import androidx.compose.ui.unit.dp
 import com.pathwayfit.app.ui.viewmodel.EightFourFourViewModel
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun JuaGuideScreen(vm: EightFourFourViewModel, onUpgrade: () -> Unit) {
     val user by vm.user.collectAsState()
     val trialUsed by vm.guideTrialUsed.collectAsState()
     val premium by vm.guidePremium.collectAsState()
     val locked = trialUsed && !premium.isPremium && !com.pathwayfit.app.ai.JuaGuideDemo.enabled
+    val keyboard = LocalSoftwareKeyboardController.current
+    val imeBottom = WindowInsets.ime.getBottom(LocalDensity.current)
     val context = LocalContext.current
     key(user?.userId) {
         val messages = remember { mutableStateListOf<Pair<String, String>>() }
@@ -51,6 +56,7 @@ fun JuaGuideScreen(vm: EightFourFourViewModel, onUpgrade: () -> Unit) {
         fun send(text: String) {
             if (locked) { onUpgrade(); return }
             if (text.isBlank() || busy) return
+            keyboard?.hide()
             messages.add("user" to text.trim().take(4000)); input = ""; request()
         }
         val upload = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -78,13 +84,13 @@ fun JuaGuideScreen(vm: EightFourFourViewModel, onUpgrade: () -> Unit) {
                 finally { busy = false }
             }
         }
-        LaunchedEffect(messages.size, busy, error) { list.animateScrollToItem(messages.size) }
+        LaunchedEffect(messages.size, busy, error, imeBottom) { list.animateScrollToItem(if (busy || error != null) messages.size + 1 else messages.size) }
         Column(Modifier.fillMaxSize().statusBarsPadding().imePadding().padding(16.dp)) {
             Text("JuaGuide", style = MaterialTheme.typography.headlineMedium)
             if (com.pathwayfit.app.ai.JuaGuideDemo.enabled) Text("AI Preview", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
             Text("Premium career guidance • One free guidance session", color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(12.dp))
-            LazyColumn(state = list, modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            LazyColumn(state = list, modifier = Modifier.weight(1f).imeNestedScroll(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 item {
                     Surface(color = MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(18.dp)) {
                         Column(Modifier.padding(16.dp)) {
@@ -118,7 +124,7 @@ fun JuaGuideScreen(vm: EightFourFourViewModel, onUpgrade: () -> Unit) {
             TextButton(onClick = { if (locked) onUpgrade() else upload.launch(arrayOf("application/pdf", "image/jpeg", "image/png", "image/webp")) }, enabled = !busy) { Text("Upload academic results") }
             attachmentLabel?.let { Text(it); TextButton(onClick = { attachment = null; attachmentLabel = null }, enabled = !busy) { Text("Remove attachment") } }
             if (attachment != null) Text("This file will be sent to JuaGuide with your next question. Remove personal identifiers first.", style = MaterialTheme.typography.bodySmall)
-            Text("Explore your options; confirm official requirements with the institution.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 8.dp))
+            if (imeBottom == 0) Text("Explore your options; confirm official requirements with the institution.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(input, onValueChange = { input = it.take(4000) }, placeholder = { Text("Ask JuaGuide…") }, modifier = Modifier.weight(1f), maxLines = 4, shape = RoundedCornerShape(18.dp))
                 IconButton(onClick = { send(input) }, enabled = input.isNotBlank() && !busy && error == null && !locked) { Icon(Icons.AutoMirrored.Filled.Send, "Send message") }

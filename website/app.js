@@ -9,7 +9,7 @@ const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;
 function icons(root=document){root.querySelectorAll('[data-icon]').forEach(el=>{el.innerHTML=icon(el.dataset.icon);delete el.dataset.icon;});}
 const storage={get(key,fallback){try{return JSON.parse(localStorage.getItem('juafit-'+key))??fallback}catch{return fallback}},set(key,value){try{localStorage.setItem('juafit-'+key,JSON.stringify(value));return true}catch{return false}}};
 const journey=document.querySelector('#journey-dialog'),detail=document.querySelector('#detail-dialog'),authDialog=document.querySelector('#auth-dialog');
-let currentUser=null,authMode='register',authBusy=false,pendingSystem=null;
+let currentUser=null,authMode='register',authBusy=false,pendingSystem=null,pendingGuide=false;
 const savePlan=()=>storage.set(currentUser?'plan-'+currentUser.uid:'plan',plan);
 let system='cbe',step=0,answers={},results=[],loadingTimer,activeDetail=null;
 let plan=storage.get('plan',[]).filter(p=>p&&typeof p.id==='string'&&['cbe','kcse'].includes(p.type));
@@ -33,6 +33,14 @@ function openAuth(mode='register'){
  show(authDialog);document.querySelector('#auth-title').tabIndex=-1;document.querySelector('#auth-title').focus({preventScroll:true});
 }
 function updateAccount(user){
+ if(currentUser?.uid!==user?.uid){
+  guideMessages.length=0;guideAttachment=null;
+  document.querySelector('#guide-conversation').innerHTML='';
+  document.querySelector('#guide-input').value='';document.querySelector('#guide-upload').value='';
+  document.querySelector('#guide-status').textContent='';
+  document.querySelector('#guide-panel').hidden=true;
+  document.querySelector('.guide-launch').setAttribute('aria-expanded','false');
+ }
  currentUser=user;
  plan=storage.get(user?'plan-'+user.uid:'plan',[]).filter(p=>p&&typeof p.id==='string'&&['cbe','kcse'].includes(p.type));
  updateCount();
@@ -52,7 +60,7 @@ document.addEventListener('submit',async e=>{
   if(mode==='reset'){await resetPassword(values.email);errorBox.style.color='var(--blue)';errorBox.textContent='If an account uses this email, you’ll receive a reset link shortly.';}
   else{
    const result=mode==='register'?await registerAccount(values):await loginAccount(values.email,values.password);
-   updateAccount(result.user);close(authDialog);if(pendingSystem)begin(pendingSystem);else start();
+   updateAccount(result.user);close(authDialog);if(pendingGuide){pendingGuide=false;openGuide();}else if(pendingSystem)begin(pendingSystem);else start();
    toast(mode==='register'?'Welcome to JuaFit. Let’s discover your direction.':'Welcome back to JuaFit.');
   }
  }catch(error){errorBox.textContent=error.validation||authError(error);}
@@ -92,11 +100,12 @@ function addPlan(items){let added=0;for(const item of items)if(!plan.some(p=>p.i
 function myPlan(){content(`${head('SAVED ON THIS DEVICE')}<div class="modal-body"><div class="eyebrow">ONE STEP CLOSER</div><h2 id="journey-title">My plan</h2><p>Your possibilities, all in one place.</p>${plan.length?plan.map(p=>`<div class="saved-row"><button data-action="${p.type==='cbe'?'pathway':'course'}" data-id="${esc(p.id)}"><strong>${esc(p.name)}</strong><small>${p.type==='cbe'?'CBE pathway':'Course direction'} · Open to explore</small></button><button class="plan-remove" data-action="remove-plan" data-id="${esc(p.id)}" data-type="${p.type}">Remove</button></div>`).join(''):`<div class="empty-plan">${icon('save')}<h3>A little space for your big plans.</h3><p>Take a short assessment, then save your favourite directions.</p><button class="button" data-action="start">Find my path ${icon('arrow')}</button></div>`}<div class="result-actions">${plan.length?`<button class="button" data-action="print">Print / save PDF ${icon('print')}</button>`:''}<button class="button secondary" data-action="start">Explore more ${icon('arrow')}</button></div><p class="privacy-note">${icon('shield')} Stored in this browser. No account or server.</p></div>`);}
 const guideMessages=[];
 let guideAttachment=null,guideBusy=false;
-function guide(topic){const prompts={cbe:'What is CBE?',choose:'Help me choose a career direction.',courses:'Help me explore courses.',privacy:'What information should I share for career guidance?'};document.querySelector('#guide-input').value=prompts[topic]||topic;document.querySelector('#guide-input').focus();}
+function openGuide(){if(!currentUser){pendingGuide=true;pendingSystem=null;openAuth('login');toast('Sign in or register to use JuaGuide.');return;}const p=document.querySelector('#guide-panel');p.hidden=false;document.querySelector('.guide-launch').setAttribute('aria-expanded','true');document.querySelector('#guide-input').focus();}
+function guide(topic){if(!currentUser){openGuide();return;}const prompts={cbe:'What is CBE?',choose:'Help me choose a career direction.',courses:'Help me explore courses.',privacy:'What information should I share for career guidance?'};document.querySelector('#guide-input').value=prompts[topic]||topic;document.querySelector('#guide-input').focus();}
 document.querySelector('#guide-form').addEventListener('submit',async e=>{
- e.preventDefault();if(guideBusy)return;if(storage.get('guide-free-used',false)){document.querySelector('#guide-status').textContent='Your free guidance session is complete. JuaGuide Premium is required to continue. Payments will be available soon.';return;}
+ e.preventDefault();if(!currentUser){openGuide();return;}if(guideBusy)return;if(storage.get('guide-free-used-'+currentUser.uid,false)){document.querySelector('#guide-status').textContent='Your free guidance session is complete. JuaGuide Premium is required to continue. Payments will be available soon.';return;}
  const input=document.querySelector('#guide-input'),status=document.querySelector('#guide-status'),send=document.querySelector('#guide-send'),box=document.querySelector('#guide-conversation');
- const text=input.value.trim();if(!text)return;
+ const text=input.value.trim();if(!text)return;const requestingUser=currentUser.uid;
  guideBusy=true;send.disabled=true;status.textContent='JuaGuide is thinking…';
  const file=document.querySelector('#guide-upload').files[0];
  try{
@@ -104,8 +113,8 @@ document.querySelector('#guide-form').addEventListener('submit',async e=>{
   const message={role:'user',text};
   const response=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:[...guideMessages.slice(-18),message],context:{assessment:answers,courses,attachment:guideAttachment}}),signal:AbortSignal.timeout(120000)});
   if(!response.ok)throw Error('JuaGuide is unavailable right now. Please try again shortly.');
-  const result=await response.json();if(typeof result.reply!=='string'||!result.reply.trim())throw Error('JuaGuide could not respond. Please try again.');
-  guideMessages.push(message,{role:'model',text:result.reply});if(result.completed)storage.set('guide-free-used',true);
+  const result=await response.json();if(currentUser?.uid!==requestingUser)return;if(typeof result.reply!=='string'||!result.reply.trim())throw Error('JuaGuide could not respond. Please try again.');
+  guideMessages.push(message,{role:'model',text:result.reply});if(result.completed)storage.set('guide-free-used-'+currentUser.uid,true);
   box.insertAdjacentHTML('beforeend',`<div class="guide-user">${esc(text)}${file?'<small>Academic results attached</small>':''}</div><div class="guide-message guide-reply">${esc(result.reply)}</div>`);
   input.value='';document.querySelector('#guide-upload').value='';status.textContent='';box.lastElementChild.scrollIntoView({behavior:'smooth',block:'nearest'});
  }catch(error){status.textContent=error.message||'Unable to connect. Please try again.';}finally{guideBusy=false;send.disabled=false;}
@@ -139,7 +148,7 @@ document.addEventListener('click',e=>{const guideButton=e.target.closest('[data-
  case 'plan':if(detail.open)close(detail);myPlan();break;
  case 'remove-plan':plan=plan.filter(p=>!(p.id===b.dataset.id&&p.type===b.dataset.type));savePlan();updateCount();myPlan();break;
  case 'print':document.querySelectorAll('dialog[open] details').forEach(d=>d.open=true);window.print();break;
- case 'guide':{const p=document.querySelector('#guide-panel');p.hidden=!p.hidden;document.querySelector('.guide-launch').setAttribute('aria-expanded',!p.hidden);if(!p.hidden)p.querySelector('button').focus();break;}
+ case 'guide':if(document.querySelector('#guide-panel').hidden)openGuide();else document.querySelector('#guide-panel').hidden=true;break;
  case 'close-guide':document.querySelector('#guide-panel').hidden=true;document.querySelector('.guide-launch').focus();break;
  case 'guide-start':document.querySelector('#guide-panel').hidden=true;enterJourney(b.dataset.system==='choose'?null:b.dataset.system);break;
  case 'privacy':content(`${head('YOUR PRIVACY','close-detail')}<div class="modal-body"><h2 id="detail-title">Your journey stays yours.</h2><p>Assessment answers are processed in this page and are not uploaded. Preview accounts are stored only in this browser; use a sample password. When Firebase is connected, sign-in details are sent securely to Firebase Authentication.</p><p>Theme preferences and saved course or pathway names stay in your browser’s local storage. They do not sync between devices. Saved plans are separated by account on this device.</p><p>Fonts load from Google Fonts. Official resource links open external websites with their own privacy policies.</p><p>JuaGuide offers preset quick guidance in this version. It does not process transcripts or use a live AI service.</p><button class="button secondary" data-action="clear-data">Clear my saved plan ${icon('shield')}</button></div>`,detail);break;

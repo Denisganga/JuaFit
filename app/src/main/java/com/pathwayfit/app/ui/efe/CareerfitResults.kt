@@ -78,6 +78,11 @@ fun CareerfitRecommendationsScreen(vm: EightFourFourViewModel, onOpen: (String) 
         Spacer(Modifier.height(9.dp))
         Text("Based on your profile and assessment, here are the top 5 career/course pathways for you.", color = ResultMuted, fontSize = 15.sp, lineHeight = 21.sp, textAlign = TextAlign.Center)
         Spacer(Modifier.height(15.dp))
+        ai?.summary?.takeIf { it.isNotBlank() }?.let { summary ->
+            Surface(color = palette.color(0xFFEAF4FF), shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 14.dp)) {
+                Text(summary, color = ResultInk, fontSize = 16.sp, lineHeight = 23.sp, modifier = Modifier.padding(14.dp))
+            }
+        }
         val courses = results?.courses.orEmpty().take(5)
         if (courses.isEmpty()) Button(onClick = onStart) { Text("Take Assessment") }
         courses.forEachIndexed { i, match ->

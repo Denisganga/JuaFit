@@ -25,8 +25,8 @@ def analyze(payload, key, model):
     answers = payload.get('answers', [])
     if not key:
         raise ValueError('Configure GEMINI_API_KEY on the backend.')
-    if not courses or len(courses) > 300 or len(answers) != 10:
-        raise ValueError('Expected ten assessment questions and a course catalog.')
+    if not courses or len(courses) > 300 or len(answers) not in (9, 10):
+        raise ValueError('Expected nine assessment questions (or ten for an older app) and a course catalog.')
     allowed = {c['id'] for c in courses}
     schema = {'type': 'OBJECT', 'properties': {
         'summary': {'type': 'STRING'},

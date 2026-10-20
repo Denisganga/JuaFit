@@ -107,3 +107,21 @@ class ProviderErrorTests(unittest.TestCase):
         self.assertEqual('API_KEY_INVALID', reply.call_args.args[1]['code'])
         self.assertNotIn(key, str(logs.output))
         self.assertNotIn(key, str(reply.call_args))
+
+
+class AssessmentVersionTests(GeminiContractTests):
+    def test_nine_question_app_returns_complete_insights(self):
+        payload = self.payload()
+        payload['answers'] = payload['answers'][:9]
+        with patch('server.urlopen', return_value=self.response(['computing'])) as remote:
+            result = analyze(payload, 'test-key', 'test-model')
+        evidence = json.loads(json.loads(remote.call_args.args[0].data)['contents'][0]['parts'][0]['text'])
+        self.assertEqual(9, len(evidence['answers']))
+        self.assertEqual('computing', result['insights'][0]['courseId'])
+
+    def test_incomplete_assessment_rejected_before_provider(self):
+        payload = self.payload()
+        payload['answers'] = payload['answers'][:3]
+        with patch('server.urlopen') as remote, self.assertRaises(ValueError):
+            analyze(payload, 'test-key', 'test-model')
+        remote.assert_not_called()

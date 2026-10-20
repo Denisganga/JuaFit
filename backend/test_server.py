@@ -91,3 +91,19 @@ class JuaGuideTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ProviderErrorTests(unittest.TestCase):
+    def test_provider_error_is_logged_with_credentials_redacted(self):
+        from urllib.error import HTTPError
+        handler = object.__new__(Handler)
+        handler.path = '/chat'
+        handler.headers = {'Content-Length': '2'}
+        handler.rfile = io.BytesIO(b'{}')
+        key = 'private-test-key'
+        error = HTTPError('https://example.test', 400, 'Bad request', {}, io.BytesIO(json.dumps({'error': {'message': 'Invalid ' + key, 'status': 'INVALID_ARGUMENT', 'details': [{'reason': 'API_KEY_INVALID'}]}}).encode()))
+        with patch('server.load_config', return_value=(key, 'test-model')), patch('server.chat', side_effect=error), patch.object(Handler, 'reply') as reply, self.assertLogs(level='ERROR') as logs:
+            handler.do_POST()
+        self.assertEqual('API_KEY_INVALID', reply.call_args.args[1]['code'])
+        self.assertNotIn(key, str(logs.output))
+        self.assertNotIn(key, str(reply.call_args))

@@ -25,5 +25,15 @@
       "maxDuration": 120,
       "includeFiles": "server.py"
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/chat",
+      "destination": "/api/chat"
+    },
+    {
+      "source": "/analyze",
+      "destination": "/api/analyze"
+    }
+  ]
 }

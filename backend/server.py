@@ -1,6 +1,8 @@
 """Local development Gemini proxy. Keep the API key on this host, outside the APK."""
 import json
 import os
+import re
+import logging
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.request import Request, urlopen
@@ -15,7 +17,7 @@ def load_config():
             if '=' in line and not line.startswith('#'):
                 key, value = line.split('=', 1)
                 config[key.strip()] = value.strip()
-    return os.environ.get('GEMINI_API_KEY', config.get('GEMINI_API_KEY', '')), os.environ.get('GEMINI_MODEL', config.get('GEMINI_MODEL', 'gemini-3.6-flash'))
+    return os.environ.get('GEMINI_API_KEY', config.get('GEMINI_API_KEY', '')).strip(), os.environ.get('GEMINI_MODEL', config.get('GEMINI_MODEL', 'gemini-3.6-flash')).strip()
 
 
 def analyze(payload, key, model):
@@ -158,7 +160,19 @@ class Handler(BaseHTTPRequestHandler):
             key, model = load_config()
             self.reply(200, chat(payload, key, model) if self.path == '/chat' else analyze(payload, key, model))
         except HTTPError as error:
-            self.reply(502, {'error': f'Gemini rejected the request (HTTP {error.code}). Check the API key and model access.'})
+            try:
+                details = json.loads(error.read()).get('error', {})
+            except (ValueError, TypeError):
+                details = {}
+            reason = next((d.get('reason') for d in details.get('details', []) if isinstance(d, dict) and d.get('reason')), details.get('status', 'PROVIDER_ERROR'))
+            reason = re.sub(r'[^A-Z0-9_]', '', str(reason))[:80] or 'PROVIDER_ERROR'
+            message = str(details.get('message', 'No error details provided.'))
+            key, _ = load_config()
+            if key:
+                message = message.replace(key, '[REDACTED]')
+            message = re.sub(r'(?:AQ\.|AIza)[A-Za-z0-9_.-]{15,}', '[REDACTED]', message)[:1500]
+            logging.error('JuaGuide provider HTTP %s [%s]: %s', error.code, reason, message)
+            self.reply(502, {'error': 'JuaGuide could not connect to its guidance service. Please try again later.', 'code': reason, 'providerStatus': error.code})
         except (URLError, TimeoutError):
             self.reply(504, {'error': 'Gemini connection timed out. Retry shortly.'})
         except (ValueError, KeyError, IndexError, TypeError):

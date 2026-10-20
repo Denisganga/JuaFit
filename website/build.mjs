@@ -1,0 +1,12 @@
+import {mkdir,copyFile,cp,writeFile} from 'node:fs/promises';
+await mkdir('dist',{recursive:true});
+for(const file of ['index.html','styles.css','app.js','auth.js','preview-auth.js','guidance.js','catalog.js']) await copyFile(file,`dist/${file}`);
+await cp('assets','dist/assets',{recursive:true});
+const appUrl=process.env.PUBLIC_APP_URL || '';
+if(appUrl && !appUrl.startsWith('https://')) throw Error('PUBLIC_APP_URL must use HTTPS');
+const firebaseFields={apiKey:'PUBLIC_FIREBASE_API_KEY',authDomain:'PUBLIC_FIREBASE_AUTH_DOMAIN',projectId:'PUBLIC_FIREBASE_PROJECT_ID',appId:'PUBLIC_FIREBASE_APP_ID'};
+const firebase=Object.fromEntries(Object.entries(firebaseFields).map(([key,env])=>[key,process.env[env]||'']));
+const configured=Object.values(firebase).every(Boolean);
+if(Object.values(firebase).some(Boolean)&&!configured)throw Error('Set all four PUBLIC_FIREBASE_* configuration values, or leave all unset.');
+await writeFile('dist/config.js',`export default ${JSON.stringify({appUrl,firebase:configured?firebase:null})};\n`);
+console.log('JuaFit built in dist/ — no secrets or backend required.');

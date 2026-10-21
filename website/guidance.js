@@ -31,7 +31,11 @@ export const kcseQuestions=[
 export function scoreTags(questions,answers){const scores={};for(const q of questions){const a=answers[q.id];if(!a)continue;for(const i of a.selected||[]){for(const t of q.options[i]?.tags||[])scores[t]=(scores[t]||0)+1;}const text=(a.text||'').toLowerCase();const words={coding:['computing','technology'],teaching:['education','teaching','helping'],conservation:['nature','science'],music:['music','performing'],football:['sports','fitness'],drawing:['visual','design'],business:['business','entrepreneurial']};for(const [word,tags] of Object.entries(words))if(text.includes(word))for(const t of tags)scores[t]=(scores[t]||0)+1;}return scores;}
 const fit=(tags,scores)=>tags.reduce((sum,t)=>sum+(scores[t]||0),0);
 export function rankPathways(answers){const scores=scoreTags(cbeQuestions,answers);return pathways.map((p,index)=>({...p,score:fit(p.tags,scores),order:index,tracks:p.tracks.map(t=>({...t,score:fit(t.tags,scores)})).sort((a,b)=>b.score-a.score)})).sort((a,b)=>b.score-a.score||a.order-b.order);}
-export function rankCourses(answers){const scores=scoreTags(kcseQuestionsFor(answers),answers);return courses.map(c=>({...c,score:fit(c.tags,scores)})).sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name)).slice(0,5);}
+export function rankCourses(answers){
+ const scores=scoreTags(kcseQuestionsFor(answers),answers);
+ const total=Object.values(scores).reduce((sum,value)=>sum+value,0);
+ return courses.map(c=>{const score=fit([...new Set(c.tags)],scores);return {...c,score,suitability:total?Math.round(100*score/total):0};}).sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name)).slice(0,5);
+}
 export function selectedLabels(questions,answers){return questions.flatMap(q=>{const a=answers[q.id];return (a?.selected||[]).map(i=>q.options[i]?.label).filter(Boolean);});}
 export function courseCareers(course){return careers.filter(c=>course.careerIds.includes(c.id));}
 export function courseGuidance(course){

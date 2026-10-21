@@ -40,3 +40,14 @@ test('subjects require three or four distinct choices',()=>{
 test('KCSE grade is required',()=>{const q=kcseQuestions[0];assert.equal(validAnswer(q,{selected:[]}),false);assert.equal(validAnswer(q,{selected:[3]}),true);});
 test('subjects are secondary subjects without primary or generic placeholders',()=>{const labels=kcseQuestionsFor({}).find(q=>q.id==='subjects').options.map(o=>o.label);for(const name of ['Science','Social Studies','Technical Studies'])assert.ok(!labels.includes(name));for(const name of ['Physics','Home Science','French','Building Construction'])assert.ok(labels.includes(name));});
 test('study locations, settings and values have distinct options',()=>{const q=id=>kcseQuestions.find(q=>q.id===id);assert.deepEqual(q('location').options.map(o=>o.label),['In Kenya','Outside Kenya','Either Kenya or abroad','Not sure yet']);assert.equal(q('values').multi,3);assert.ok(q('values').options.some(o=>o.label.startsWith('Integrity')));assert.ok(!q('environment').options.some(o=>o.label==='Working independently'));});
+
+test('course suitability is bounded, ranked and evidence-based',()=>{
+ const answers={subjects:{selected:[0,4,5]},field:{selected:[2]},skills:{selected:[2,4]}};
+ const ranked=rankCourses(answers);
+ assert.equal(ranked.length,5);
+ assert.ok(ranked.every(c=>Number.isInteger(c.suitability)&&c.suitability>=0&&c.suitability<=100));
+ assert.ok(ranked.every((c,i)=>i===0||ranked[i-1].score>=c.score));
+ const scores=scoreTags(kcseQuestionsFor(answers),answers),total=Object.values(scores).reduce((a,b)=>a+b,0);
+ for(const c of ranked)assert.equal(c.suitability,Math.round(100*c.score/total));
+ assert.ok(rankCourses({}).every(c=>c.suitability===0));
+});

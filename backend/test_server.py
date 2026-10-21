@@ -166,3 +166,15 @@ class StreamingTests(unittest.TestCase):
             result=course_facts({'course':'Computing','section':'requirements'},'test-key','test-model')
         self.assertEqual([],result['sources'])
         self.assertNotIn('Invented',result['text'])
+
+
+class GroundingEvidenceTests(unittest.TestCase):
+    def test_only_official_supported_passages_survive_final_response(self):
+        from server import course_facts
+        raw={'candidates':[{'content':{'parts':[{'text':'Supported fact. Unsupported claim. Blog claim.'}]},'groundingMetadata':{'groundingChunks':[{'web':{'title':'ku.ac.ke','uri':'https://www.ku.ac.ke/programme'}},{'web':{'title':'example.com','uri':'https://example.com'}}],'groundingSupports':[{'segment':{'text':'Supported fact.'},'groundingChunkIndices':[0]},{'segment':{'text':'Blog claim.'},'groundingChunkIndices':[1]}]}}]}
+        with patch('server.urlopen',return_value=io.BytesIO(json.dumps(raw).encode())):
+            result=course_facts({'course':'Computing','section':'universities'},'test-key','test-model')
+        self.assertIn('Supported fact.',result['text'])
+        self.assertNotIn('Unsupported',result['text'])
+        self.assertNotIn('Blog',result['text'])
+        self.assertEqual(1,len(result['sources']))

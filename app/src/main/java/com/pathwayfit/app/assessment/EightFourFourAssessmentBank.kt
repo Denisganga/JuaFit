@@ -113,6 +113,22 @@ object EightFourFourAssessmentBank {
                 )),
         ),
     )
+    /** Interest alignment, never an academic mark or admission probability. */
+    fun subjectRanking(answers: List<AssessmentAnswer>): List<Pair<String, Int>> {
+        val map = answers.associateBy { it.questionId }
+        val signals = mutableMapOf<String, Float>()
+        assessment.questions.filter { it.id != "efe_v2_q3" }.forEach { q ->
+            q.options.filter { it.id in map[q.id]?.selectedOptionIds.orEmpty() }.forEach { option ->
+                option.signals.forEach { (tag, value) -> signals[tag] = (signals[tag] ?: 0f) + value }
+            }
+        }
+        val total = signals.values.sum()
+        return subjects(map).filter { it.id in map["efe_v2_q3"]?.selectedOptionIds.orEmpty() }.map { option ->
+            val score = option.signals.keys.sumOf { (signals[it] ?: 0f).toDouble() }.toFloat()
+            option.label to (if(total > 0f) kotlin.math.round(100f * score / total).toInt() else 0)
+        }.sortedWith(compareByDescending<Pair<String, Int>> { it.second }.thenBy { it.first })
+    }
+
     fun isPrimary(answers: Map<String, AssessmentAnswer>) = false
 
     fun subjects(answers: Map<String, AssessmentAnswer>): List<AssessmentOption> = assessment.questions.first { it.id == "efe_v2_q3" }.options

@@ -382,7 +382,7 @@ private fun NavGraphBuilder.onboardingGraph(nav: NavHostController, session: Ses
         val user by session.user.collectAsState()
         ChooseSystemScreen(name = user?.firstName ?: "") { system ->
             session.chooseSystem(system) {
-                nav.resetTo(Routes.EFE_GRAPH)
+                nav.resetTo(Routes.homeOf(system))
             }
         }
     }

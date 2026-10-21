@@ -34,6 +34,10 @@
     {
       "source": "/analyze",
       "destination": "/api/analyze"
+    },
+    {
+      "source": "/course-facts",
+      "destination": "/api/course-facts"
     }
   ]
 }

@@ -1,5 +1,7 @@
 package com.pathwayfit.app.ui.efe
 
+import kotlinx.serialization.json.*
+
 import com.pathwayfit.app.ui.theme.careerfitPalette
 import android.graphics.BitmapFactory
 import androidx.activity.compose.BackHandler
@@ -72,6 +74,7 @@ fun CareerfitRecommendationsScreen(vm: EightFourFourViewModel, onOpen: (String) 
 
     val results by vm.results.collectAsState()
     val ai by vm.geminiResult.collectAsState()
+    val subjects by vm.subjectRanking.collectAsState()
     ResultFrame {
         Text("Your Personalized\nRecommendations", color = ResultInk, fontSize = 24.sp, lineHeight = 29.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         if (com.pathwayfit.app.ai.JuaGuideDemo.enabled) Text("AI Preview • Personalized guidance", color = ResultMuted, fontSize = 12.sp)
@@ -106,6 +109,11 @@ fun CareerfitRecommendationsScreen(vm: EightFourFourViewModel, onOpen: (String) 
                 Text("These recommendations are based on your interests, strengths and goals. You can explore each option to learn more.",color=ResultMuted,fontSize = 13.sp,lineHeight = 18.sp,modifier=Modifier.padding(start=14.dp))
             }
         }
+        if(subjects.isNotEmpty()) {
+            Text("Your subject alignment ranking", color=ResultInk, fontSize=19.sp, fontWeight=FontWeight.Bold, modifier=Modifier.padding(top=16.dp))
+            subjects.forEachIndexed { i, (name, percent) -> Text("${i+1}. $name — $percent% alignment", color=ResultMuted, modifier=Modifier.padding(vertical=6.dp)) }
+            Text("Alignment with your interests and strengths; not exam marks or admission chances.",color=ResultMuted,fontSize=12.sp)
+        }
         if (ai != null) Text("Personalized by JuaGuide. Recommendations are ranked guidance, not admission guarantees.",color=ResultMuted,fontSize = 11.sp,modifier=Modifier.padding(top=8.dp))
     }
 }
@@ -120,6 +128,31 @@ fun CareerfitCourseScreen(vm: EightFourFourViewModel, courseId: String, onBack: 
     val data by vm.data.collectAsState()
     val match = results?.courses?.firstOrNull { it.course.id == courseId }
     var page by rememberSaveable(courseId) { mutableStateOf("Menu") }
+    var facts by remember(courseId, page) { mutableStateOf("") }
+    var factSources by remember(courseId, page) { mutableStateOf<List<Pair<String,String>>>(emptyList()) }
+    var factsBusy by remember(courseId, page) { mutableStateOf(false) }
+    var factsError by remember(courseId, page) { mutableStateOf<String?>(null) }
+    val factContext = androidx.compose.ui.platform.LocalContext.current
+    LaunchedEffect(courseId, page) {
+        val section = when(page) { "Entry requirements" -> "requirements"; "Universities offering it" -> "universities"; "Career progression" -> "progression"; else -> null }
+        if(section != null && match != null) {
+            factsBusy = true
+            try {
+                val result = com.pathwayfit.app.ai.GeminiConnection.stream("course-facts", kotlinx.serialization.json.buildJsonObject {
+                    put("course", kotlinx.serialization.json.JsonPrimitive(match.course.name)); put("section", kotlinx.serialization.json.JsonPrimitive(section))
+                }) { event ->
+                    if(event["type"]?.jsonPrimitive?.content == "text") facts = "Checking sources — provisional until complete:\n" + event["text"]?.jsonPrimitive?.content.orEmpty()
+                }
+                facts = result["text"]?.jsonPrimitive?.content.orEmpty()
+                factSources = result["sources"]?.jsonArray.orEmpty().mapNotNull { source ->
+                    val web = source.jsonObject
+                    val uri = web["uri"]?.jsonPrimitive?.content.orEmpty()
+                    if(uri.startsWith("https://")) (web["title"]?.jsonPrimitive?.content ?: "Source") to uri else null
+                }
+            } catch(e: Exception) { if(e is kotlinx.coroutines.CancellationException) throw e; factsError = "Unable to verify current information. Please reopen this section to retry." }
+            finally { factsBusy = false }
+        }
+    }
     val back = { if (page == "Menu") onBack() else page = "Menu" }
     BackHandler(onBack = back)
     ResultFrame(onBack = back) {
@@ -171,6 +204,13 @@ fun CareerfitCourseScreen(vm: EightFourFourViewModel, courseId: String, onBack: 
             }
             else -> {
                 SectionTitle(page,icons[sections.indexOf(page)])
+                if(page in listOf("Entry requirements", "Universities offering it", "Career progression")) {
+                    if(factsBusy) { LinearProgressIndicator(Modifier.fillMaxWidth()); Text("Checking current official sources…", color=ResultMuted) }
+                    factsError?.let { Text(it, color=MaterialTheme.colorScheme.error) }
+                    if(facts.isNotBlank()) Text(facts, color=ResultMuted, fontSize=16.sp, lineHeight=23.sp)
+                    factSources.forEach { (title, url) -> TextButton(onClick={ factContext.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))) }) { Text(title) } }
+                    return@ResultFrame
+                }
                 val entries = when(page) {
                     "Entry requirements" -> data?.admissionRequirements.orEmpty().filter { it.courseId==courseId && it.verified }.map { "${it.description}\nSource: ${it.sourceName}" }.ifEmpty { listOf("Verified entry requirements are not available yet. Confirm current requirements with the university or KUCCPS.") }
                     "Universities offering it" -> listOf("Confirm current programme availability directly with the universities. Listings in this prototype are not verified.")

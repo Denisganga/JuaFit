@@ -27,12 +27,26 @@ fun GeminiAnalysisScreen(vm: EightFourFourViewModel, onReady: () -> Unit) {
     val palette = careerfitPalette
 
     val stage by vm.analysisStage.collectAsState()
+    val preview by vm.analysisPreview.collectAsState()
+    val courseNames by vm.analysisCourseNames.collectAsState()
     val error by vm.analysisError.collectAsState()
     LaunchedEffect(Unit) { vm.analyzeAnswers() }
     LaunchedEffect(stage) { if (stage == 4) onReady() }
     val ink = palette.color(0xFF080C35)
     val muted = palette.color(0xFF405D8E)
     val blue = palette.color(0xFF0064F5)
+    if (preview.isNotBlank()) {
+        Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding().padding(20.dp)) {
+            Text("Your recommendations are appearing", style = MaterialTheme.typography.titleLarge)
+            androidx.compose.foundation.lazy.LazyColumn(Modifier.weight(1f)) {
+                item { Text(preview, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(vertical = 16.dp)) }
+                items(courseNames.size) { i -> Text("${i+1}. ${courseNames[i]}", modifier = Modifier.padding(vertical = 10.dp)) }
+                item { Text("Preparing the remaining details…", style = MaterialTheme.typography.bodyMedium) }
+                if (error != null) item { Text(error!!); Button(onClick = { vm.analyzeAnswers() }) { Text("Retry") } }
+            }
+        }
+        return
+    }
     val context = LocalContext.current
     val logo = remember { BitmapFactory.decodeResource(context.resources, R.drawable.juafit_emblem).asImageBitmap() }
     val robot = remember { BitmapFactory.decodeResource(context.resources, R.drawable.analysis_reference).asImageBitmap() }

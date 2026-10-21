@@ -18,7 +18,7 @@ import java.net.URL
 data class GeminiAssessmentResult(val summary: String, val courseIds: List<String>, val model: String, val insights: List<GeminiCourseInsight> = emptyList())
 
 class GeminiAssessmentService {
-    suspend fun analyze(profile: UniversityProfile, questions: List<AssessmentQuestion>, answers: List<AssessmentAnswer>, candidates: CourseRecommendationSet): GeminiAssessmentResult = withContext(Dispatchers.IO) {
+    suspend fun analyze(profile: UniversityProfile, questions: List<AssessmentQuestion>, answers: List<AssessmentAnswer>, candidates: CourseRecommendationSet, onProgress: (JsonObject) -> Unit = {}): GeminiAssessmentResult = withContext(Dispatchers.IO) {
 
         val payload = buildJsonObject {
             put("profile", buildJsonObject {
@@ -43,7 +43,7 @@ class GeminiAssessmentService {
             }) } })
         }
         if (JuaGuideDemo.enabled) return@withContext JuaGuideDemo.analyze(questions, answers, candidates)
-        val result = Json.decodeFromString<GeminiAssessmentResult>(GeminiConnection.call("analyze", payload).toString())
+        val result = Json.decodeFromString<GeminiAssessmentResult>(GeminiConnection.stream("analyze", payload, onProgress).toString())
             val validIds = candidates.courses.map { it.course.id }.toSet()
             check(result.summary.isNotBlank() && result.courseIds.isNotEmpty() && result.courseIds.distinct().size == result.courseIds.size && result.courseIds.all { it in validIds }) { "JuaGuide returned an invalid recommendation. Please retry." }
             check(result.insights.map { it.courseId }.toSet() == result.courseIds.toSet() && result.insights.size == result.courseIds.size) { "JuaGuide returned incomplete course explanations. Please retry." }

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {cbeQuestions,kcseQuestions,rankPathways,rankCourses,courseGuidance,scoreTags,validAnswer,kcseQuestionsFor} from '../guidance.js';
+import {cbeQuestions,kcseQuestions,rankPathways,rankCourses,courseGuidance,scoreTags,validAnswer,kcseQuestionsFor,rankSubjects} from '../guidance.js';
 import {courses} from '../catalog.js';
 test('science and engineering answers lead to STEM and a relevant track',()=>{
  const ranked=rankPathways({curious:{selected:[0,1]},subjects:{selected:[0,1]},strength:{selected:[0,1]},learn:{selected:[0]},project:{selected:[0]}});
@@ -50,4 +50,14 @@ test('course suitability is bounded, ranked and evidence-based',()=>{
  const scores=scoreTags(kcseQuestionsFor(answers),answers),total=Object.values(scores).reduce((a,b)=>a+b,0);
  for(const c of ranked)assert.equal(c.suitability,Math.round(100*c.score/total));
  assert.ok(rankCourses({}).every(c=>c.suitability===0));
+});
+
+test('CBE pathways and subjects have bounded evidence-based percentages',()=>{
+ const answers={curious:{selected:[0,1]},subjects:{selected:[0]},strength:{selected:[0]}};
+ const ranked=rankPathways(answers);assert.equal(ranked.length,3);
+ assert.ok(ranked.every(p=>p.suitability>=0&&p.suitability<=100));
+ assert.ok(ranked.some(p=>p.name==='Arts and Sports Science'));
+ const subjects=rankSubjects({subjects:{selected:[0,3,4]},skills:{selected:[2,4]},field:{selected:[2]}});
+ assert.equal(subjects.length,3);assert.ok(subjects.every((s,i)=>s.percent>=0&&s.percent<=100&&(i===0||subjects[i-1].percent>=s.percent)));
+ assert.ok(cbeQuestions.find(q=>q.id==='subjects').title.includes('learning areas'));
 });

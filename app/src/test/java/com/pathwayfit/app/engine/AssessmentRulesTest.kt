@@ -29,4 +29,14 @@ class AssessmentRulesTest {
         assertTrue(subjects.any { it.label == "Home Science" })
         assertEquals(3, questions.first { it.id == "efe_v2_q9" }.maxSelections)
     }
+    @Test fun subjectAlignmentIsRankedAndNeverExceedsOneHundred() {
+        val ranking = Bank.subjectRanking(listOf(
+            AssessmentAnswer("efe_v2_q3", setOf("MAT", "BIO", "PHY")),
+            AssessmentAnswer("efe_v2_q4", setOf("3", "6")),
+            AssessmentAnswer("efe_v2_q5", setOf("3"))
+        ))
+        assertEquals(3, ranking.size)
+        assertTrue(ranking.all { it.second in 0..100 })
+        assertTrue(ranking.zipWithNext().all { (a,b) -> a.second >= b.second })
+    }
 }

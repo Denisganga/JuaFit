@@ -346,9 +346,9 @@ fun CbeResultsScreen(vm: CbeViewModel, onBack: (() -> Unit)?, onOpen: (String) -
             item { EmptyState(Icons.AutoMirrored.Outlined.Assignment, "No recommendations yet", "Complete the CBE assessment to see the pathways that match you.", "Start Assessment", onStart) }
             return@PfScreen
         }
-        item { Text("Based on your profile and assessment, these pathways best match your interests and strengths.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        item { Text("Ranked by interest and strength alignment. Percentages are guidance scores, not official Ministry placement scores.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         itemsIndexed(set.pathways) { i, m ->
-            PathwayCard(m.pathway.name, m.pathway.description, pathwayIcon(m.pathway.id), pathwayTone(m.pathway.id), m.percent, i == 0) { onOpen(m.pathway.id) }
+            PathwayCard("${i + 1}. ${m.pathway.name}", m.pathway.description, pathwayIcon(m.pathway.id), pathwayTone(m.pathway.id), m.percent, i == 0) { onOpen(m.pathway.id) }
         }
         item { PrimaryButton("Explore all pathways", onExplore) }
 
@@ -538,7 +538,7 @@ fun CbeExplorerScreen(vm: CbeViewModel, onBack: (() -> Unit)?) {
             items(r.pathways, key = { it.id }) { p ->
                 PathwayCard(p.name, p.description, pathwayIcon(p.id), pathwayTone(p.id)) { openPathway = p.id }
             }
-            item { SectionTitle("Core subjects for all learners") }
+            item { SectionTitle("Core learning areas for all learners") }
             item { PfCard { r.coreSubjects().forEach { Text(it.name, Modifier.padding(vertical = 4.dp)) } } }
         } else if (track == null) {
             item { PfCard(container = LocalRoleAccent.current.soft, border = false) { Text(pathway.description, style = MaterialTheme.typography.bodyLarge) } }

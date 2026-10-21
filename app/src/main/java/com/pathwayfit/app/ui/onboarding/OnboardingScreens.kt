@@ -171,19 +171,14 @@ fun ChooseSystemScreen(name: String, onChoose: (EducationSystem) -> Unit) {
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("Select CBE or 8-4-4 to continue.")
-                Button(onClick = { comingSoon = true }, modifier = Modifier.fillMaxWidth()) { Text("CBE") }
+                Button(onClick = { onChoose(EducationSystem.CBE) }, modifier = Modifier.fillMaxWidth()) { Text("CBE") }
                 Button(onClick = { onChoose(EducationSystem.EIGHT_FOUR_FOUR) }, modifier = Modifier.fillMaxWidth()) { Text("8-4-4") }
             }
         },
         confirmButton = {},
         containerColor = MaterialTheme.colorScheme.surface,
     )
-    if (comingSoon) androidx.compose.material3.AlertDialog(
-        onDismissRequest = { comingSoon = false },
-        title = { Text("Coming soon") },
-        text = { Text("The CBE experience is coming soon.") },
-        confirmButton = { TextButton(onClick = { comingSoon = false }) { Text("OK") } },
-    )
+
 }
 
 @Composable

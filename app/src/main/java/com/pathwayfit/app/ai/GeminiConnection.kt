@@ -62,6 +62,32 @@ object GeminiConnection {
         } finally { connection.disconnect() }
     }
 
+    suspend fun stream(path: String, payload: JsonObject, onEvent: (JsonObject) -> Unit): JsonObject = withContext(Dispatchers.IO) {
+        val base = BuildConfig.GEMINI_ANALYSIS_URL.trimEnd('/')
+        check(base.startsWith("https://")) { "JuaGuide is not connected yet." }
+        val connection = URL("$base/$path").openConnection() as HttpURLConnection
+        try {
+            connection.requestMethod = "POST"; connection.doOutput = true
+            connection.connectTimeout = 15000; connection.readTimeout = 115000
+            connection.setRequestProperty("Content-Type", "application/json")
+            val body = JsonObject(payload + ("stream" to JsonPrimitive(true)))
+            connection.outputStream.use { it.write(body.toString().toByteArray(Charsets.UTF_8)) }
+            check(connection.responseCode == 200) { "JuaGuide could not connect. Please retry." }
+            var result: JsonObject? = null
+            connection.inputStream.bufferedReader(Charsets.UTF_8).useLines { lines ->
+                lines.filter { it.isNotBlank() }.forEach { line ->
+                    val event = Json.parseToJsonElement(line).jsonObject
+                    when(event["type"]?.jsonPrimitive?.content) {
+                        "done" -> result = event.getValue("result").jsonObject
+                        "error" -> error(event["error"]?.jsonPrimitive?.content ?: "Please retry.")
+                        else -> onEvent(event)
+                    }
+                }
+            }
+            result ?: error("Response interrupted. Please retry.")
+        } finally { connection.disconnect() }
+    }
+
     private fun request(url: String, body: JsonObject, key: String): JsonObject {
         val connection = URL(url).openConnection() as HttpURLConnection
         try {

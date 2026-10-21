@@ -125,3 +125,44 @@ class AssessmentVersionTests(GeminiContractTests):
         with patch('server.urlopen') as remote, self.assertRaises(ValueError):
             analyze(payload, 'test-key', 'test-model')
         remote.assert_not_called()
+
+
+class StreamingTests(unittest.TestCase):
+    def test_partial_json_strings_never_display_structure_or_incomplete_escapes(self):
+        from server import partial_string
+        self.assertEqual('Hello', partial_string('{"reply":"Hello', 'reply'))
+        self.assertEqual('Line\nnext', partial_string('{"reply":"Line\\nnext", "completed":false}', 'reply'))
+        self.assertEqual('Hello', partial_string('{"reply":"Hello' + chr(92), 'reply'))
+
+    def test_stream_emits_text_before_returning_final_json(self):
+        from server import provider_text
+        from urllib.request import Request
+        first = '{"reply":"Hello'
+        second = ' learner","completed":false}'
+        chunks = b''.join(b'data: ' + json.dumps({'candidates':[{'content':{'parts':[{'text':text}]}}]}).encode() + b'\n\n' for text in [first,second])
+        events = []
+        request = Request('https://example.test/model:generateContent', data=b'{}')
+        with patch('server.urlopen', return_value=io.BytesIO(chunks)):
+            text = provider_text(request, events.append)
+        self.assertEqual('Hello', events[0]['text'])
+        self.assertEqual('Hello learner', events[-1]['text'])
+        self.assertFalse(json.loads(text)['completed'])
+        self.assertIn('streamGenerateContent?alt=sse', request.full_url)
+
+    def test_completed_course_emitted_before_full_assessment_finishes(self):
+        from server import provider_text
+        from urllib.request import Request
+        text = '{"summary":"Your interests","insights":[{"courseId":"it","overview":"Build software"},'
+        chunk = b'data: ' + json.dumps({'candidates':[{'content':{'parts':[{'text':text}]}}]}).encode() + b'\n\n'
+        events=[]
+        with patch('server.urlopen', return_value=io.BytesIO(chunk)):
+            provider_text(Request('https://example.test/model:generateContent',data=b'{}'),events.append,'summary')
+        self.assertTrue(any(e['type']=='course' and e['course']['courseId']=='it' for e in events))
+
+    def test_facts_without_grounding_are_not_presented_as_verified(self):
+        from server import course_facts
+        raw={'candidates':[{'content':{'parts':[{'text':'Invented requirements'}]}}]}
+        with patch('server.urlopen',return_value=io.BytesIO(json.dumps(raw).encode())):
+            result=course_facts({'course':'Computing','section':'requirements'},'test-key','test-model')
+        self.assertEqual([],result['sources'])
+        self.assertNotIn('Invented',result['text'])

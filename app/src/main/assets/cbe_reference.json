@@ -1,172 +1,885 @@
 {
   "meta": {
-    "title": "CBE Senior School structure (placeholder)",
-    "source": "Interim structure based on publicly reported KICD Senior School pathway information. Replace this file with data taken from the official PATHWAYFIT CBE reference document.",
-    "version": "0.1-unverified",
+    "title": "Kenyan Senior School pathways and tracks",
+    "source": "Ministry of Education Senior School Selection: https://selection.education.go.ke/uploads/1750333580754-subject-combinations-1750333524964.pdf",
+    "version": "2026-10-21",
     "verified": false,
-    "note": "The CBE reference document was not supplied with the first build. Every pathway, track, area and subject below is marked verified=false until it is checked against that document. Areas of specialization are grouped by subject and must be confirmed."
+    "note": "Pathway and track names checked against Ministry combinations. Interest percentages are guidance scores, not official placement scores. Learning-area examples are not approved combinations."
   },
-  "grades": ["Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12"],
+  "grades": [
+    "Grade 7",
+    "Grade 8",
+    "Grade 9",
+    "Grade 10",
+    "Grade 11",
+    "Grade 12"
+  ],
   "pathways": [
     {
       "id": "stem",
       "name": "STEM",
       "description": "Science, Technology, Engineering and Mathematics. For learners drawn to investigating, calculating, building and solving technical problems.",
-      "tags": ["science", "maths", "technology", "engineering", "analytical", "problem_solving"]
+      "tags": [
+        "science",
+        "maths",
+        "technology",
+        "engineering",
+        "analytical",
+        "problem_solving"
+      ],
+      "verified": true
     },
     {
       "id": "social_sciences",
       "name": "Social Sciences",
       "description": "For learners interested in people, languages, society, values, business and how communities work.",
-      "tags": ["languages", "society", "communication", "business", "history", "people"]
+      "tags": [
+        "languages",
+        "society",
+        "communication",
+        "business",
+        "history",
+        "people"
+      ],
+      "verified": true
     },
     {
       "id": "arts_sports",
       "name": "Arts and Sports Science",
       "description": "For learners whose talents show in creative expression, performance, design and sport.",
-      "tags": ["arts", "performing", "visual", "sports", "creative", "fitness"]
+      "tags": [
+        "arts",
+        "performing",
+        "visual",
+        "sports",
+        "creative",
+        "fitness"
+      ],
+      "verified": true
     }
   ],
   "tracks": [
     {
-      "id": "stem_pure", "pathwayId": "stem", "name": "Pure Sciences",
+      "id": "stem_pure",
+      "pathwayId": "stem",
+      "name": "Pure Sciences",
       "description": "Deep study of the natural sciences and mathematics.",
-      "tags": ["science", "maths", "research", "analytical", "health", "nature", "problem_solving", "data"],
-      "futureStudy": ["Medicine and health sciences", "Pure and applied sciences", "Mathematics and statistics"],
-      "skills": ["Scientific investigation", "Quantitative reasoning", "Critical thinking"]
+      "tags": [
+        "science",
+        "maths",
+        "research",
+        "analytical",
+        "health",
+        "nature",
+        "problem_solving",
+        "data"
+      ],
+      "futureStudy": [
+        "Medicine and health sciences",
+        "Pure and applied sciences",
+        "Mathematics and statistics"
+      ],
+      "skills": [
+        "Scientific investigation",
+        "Quantitative reasoning",
+        "Critical thinking"
+      ],
+      "verified": true
     },
     {
-      "id": "stem_applied", "pathwayId": "stem", "name": "Applied Sciences",
+      "id": "stem_applied",
+      "pathwayId": "stem",
+      "name": "Applied Sciences",
       "description": "Using science to solve real problems in agriculture, computing and the home.",
-      "tags": ["agriculture", "computing", "food", "technology", "practical", "nature", "science", "problem_solving", "research"],
-      "futureStudy": ["Agriculture and food science", "Computing and information technology", "Nutrition and home science"],
-      "skills": ["Applying science", "Digital skills", "Project work"]
+      "tags": [
+        "agriculture",
+        "computing",
+        "food",
+        "technology",
+        "practical",
+        "nature",
+        "science",
+        "problem_solving",
+        "research"
+      ],
+      "futureStudy": [
+        "Agriculture and food science",
+        "Computing and information technology",
+        "Nutrition and home science"
+      ],
+      "skills": [
+        "Applying science",
+        "Digital skills",
+        "Project work"
+      ],
+      "verified": true
     },
     {
-      "id": "stem_technical", "pathwayId": "stem", "name": "Technical and Engineering",
+      "id": "stem_technical",
+      "pathwayId": "stem",
+      "name": "Technical and Engineering",
       "description": "Designing, building, fixing and operating technical systems.",
-      "tags": ["engineering", "building", "mechanics", "electrical", "hands_on", "aviation", "maths", "science", "problem_solving", "design"],
-      "futureStudy": ["Engineering", "Built environment", "Technical and vocational programmes"],
-      "skills": ["Technical drawing", "Tool and machine use", "Systems thinking"]
+      "tags": [
+        "engineering",
+        "building",
+        "mechanics",
+        "electrical",
+        "hands_on",
+        "aviation",
+        "maths",
+        "science",
+        "problem_solving",
+        "design"
+      ],
+      "futureStudy": [
+        "Engineering",
+        "Built environment",
+        "Technical and vocational programmes"
+      ],
+      "skills": [
+        "Technical drawing",
+        "Tool and machine use",
+        "Systems thinking"
+      ],
+      "verified": true
     },
     {
-      "id": "stem_cts", "pathwayId": "stem", "name": "Careers and Technology Studies",
+      "id": "stem_cts",
+      "pathwayId": "stem",
+      "name": "Careers and Technology Studies",
       "description": "Career-focused technology studies. Areas for this track are to be loaded from the official CBE reference document.",
-      "tags": ["technology", "practical", "hands_on", "entrepreneurial", "computing", "business"],
-      "futureStudy": ["Technical and vocational programmes"],
-      "skills": ["Workplace skills", "Applied technology"]
+      "tags": [
+        "technology",
+        "practical",
+        "hands_on",
+        "entrepreneurial",
+        "computing",
+        "business"
+      ],
+      "futureStudy": [
+        "Technical and vocational programmes"
+      ],
+      "skills": [
+        "Workplace skills",
+        "Applied technology"
+      ],
+      "verified": true
     },
     {
-      "id": "ss_languages", "pathwayId": "social_sciences", "name": "Languages and Literature",
+      "id": "ss_languages",
+      "pathwayId": "social_sciences",
+      "name": "Languages and Literature",
       "description": "Mastery of languages, literature and communication.",
-      "tags": ["languages", "literature", "writing", "communication", "culture", "discussion", "people", "media"],
-      "futureStudy": ["Languages and linguistics", "Journalism and communication", "Education"],
-      "skills": ["Writing", "Public speaking", "Interpretation"]
+      "tags": [
+        "languages",
+        "literature",
+        "writing",
+        "communication",
+        "culture",
+        "discussion",
+        "people",
+        "media"
+      ],
+      "futureStudy": [
+        "Languages and linguistics",
+        "Journalism and communication",
+        "Education"
+      ],
+      "skills": [
+        "Writing",
+        "Public speaking",
+        "Interpretation"
+      ],
+      "verified": true
     },
     {
-      "id": "ss_humanities", "pathwayId": "social_sciences", "name": "Humanities and Business Studies",
+      "id": "ss_humanities",
+      "pathwayId": "social_sciences",
+      "name": "Humanities and Business Studies",
       "description": "History, geography, religious education and business.",
-      "tags": ["history", "geography", "society", "faith", "business", "money", "law", "leadership"],
-      "futureStudy": ["Law and governance", "Business and economics", "Social sciences"],
-      "skills": ["Analysis of society", "Argument", "Enterprise"]
+      "tags": [
+        "history",
+        "geography",
+        "society",
+        "faith",
+        "business",
+        "money",
+        "law",
+        "leadership"
+      ],
+      "futureStudy": [
+        "Law and governance",
+        "Business and economics",
+        "Social sciences"
+      ],
+      "skills": [
+        "Analysis of society",
+        "Argument",
+        "Enterprise"
+      ],
+      "verified": true
     },
     {
-      "id": "as_performing", "pathwayId": "arts_sports", "name": "Performing Arts",
+      "id": "as_performing",
+      "pathwayId": "arts_sports",
+      "name": "Performing Arts",
       "description": "Music, dance, theatre and film.",
-      "tags": ["performing", "music", "drama", "film", "creative", "communication", "arts", "teamwork"],
-      "futureStudy": ["Music and performing arts", "Film and theatre"],
-      "skills": ["Performance", "Collaboration", "Creative expression"]
+      "tags": [
+        "performing",
+        "music",
+        "drama",
+        "film",
+        "creative",
+        "communication",
+        "arts",
+        "teamwork"
+      ],
+      "futureStudy": [
+        "Music and performing arts",
+        "Film and theatre"
+      ],
+      "skills": [
+        "Performance",
+        "Collaboration",
+        "Creative expression"
+      ],
+      "verified": true
     },
     {
-      "id": "as_visual", "pathwayId": "arts_sports", "name": "Visual Arts",
+      "id": "as_visual",
+      "pathwayId": "arts_sports",
+      "name": "Visual Arts",
       "description": "Fine art, applied art, crafts and media-based art.",
-      "tags": ["visual", "design", "crafts", "creative", "media", "visual_learning", "arts", "hands_on"],
-      "futureStudy": ["Fine art and design", "Architecture and design-related programmes"],
-      "skills": ["Drawing and design", "Visual communication", "Making"]
+      "tags": [
+        "visual",
+        "design",
+        "crafts",
+        "creative",
+        "media",
+        "visual_learning",
+        "arts",
+        "hands_on"
+      ],
+      "futureStudy": [
+        "Fine art and design",
+        "Architecture and design-related programmes"
+      ],
+      "skills": [
+        "Drawing and design",
+        "Visual communication",
+        "Making"
+      ],
+      "verified": true
     },
     {
-      "id": "as_sports", "pathwayId": "arts_sports", "name": "Sports",
+      "id": "as_sports",
+      "pathwayId": "arts_sports",
+      "name": "Sports",
       "description": "Sports science, physical education and recreation.",
-      "tags": ["sports", "fitness", "coaching", "teamwork", "health", "outdoor", "leadership"],
-      "futureStudy": ["Sports science", "Physical education", "Recreation management"],
-      "skills": ["Physical performance", "Coaching", "Teamwork"]
+      "tags": [
+        "sports",
+        "fitness",
+        "coaching",
+        "teamwork",
+        "health",
+        "outdoor",
+        "leadership"
+      ],
+      "futureStudy": [
+        "Sports science",
+        "Physical education",
+        "Recreation management"
+      ],
+      "skills": [
+        "Physical performance",
+        "Coaching",
+        "Teamwork"
+      ],
+      "verified": true
     }
   ],
   "areas": [
-    {"id": "a_biology", "trackId": "stem_pure", "name": "Biology", "description": "Living things and the human body.", "tags": ["science", "health", "nature"], "subjectIds": ["biology"]},
-    {"id": "a_chemistry", "trackId": "stem_pure", "name": "Chemistry", "description": "Substances, reactions and materials.", "tags": ["science", "research", "analytical"], "subjectIds": ["chemistry"]},
-    {"id": "a_physics", "trackId": "stem_pure", "name": "Physics", "description": "Energy, forces and how the universe works.", "tags": ["science", "maths", "engineering", "analytical"], "subjectIds": ["physics"]},
-    {"id": "a_mathematics", "trackId": "stem_pure", "name": "Mathematics", "description": "Advanced mathematical reasoning.", "tags": ["maths", "data", "analytical", "problem_solving"], "subjectIds": ["math_core"]},
-
-    {"id": "a_agriculture", "trackId": "stem_applied", "name": "Agriculture", "description": "Crops, animals and food production.", "tags": ["agriculture", "nature", "outdoor", "practical"], "subjectIds": ["agriculture"]},
-    {"id": "a_computer", "trackId": "stem_applied", "name": "Computer Studies", "description": "Programming, data and digital systems.", "tags": ["computing", "technology", "data", "problem_solving"], "subjectIds": ["computer_studies"]},
-    {"id": "a_home_science", "trackId": "stem_applied", "name": "Home Science", "description": "Food, nutrition, clothing and the home.", "tags": ["food", "health", "care", "practical"], "subjectIds": ["home_science"]},
-
-    {"id": "a_building", "trackId": "stem_technical", "name": "Building Construction", "description": "Structures and the built environment.", "tags": ["building", "engineering", "design", "hands_on"], "subjectIds": ["building_construction"]},
-    {"id": "a_electricity", "trackId": "stem_technical", "name": "Electricity", "description": "Electrical systems and electronics.", "tags": ["electrical", "engineering", "problem_solving"], "subjectIds": ["electricity"]},
-    {"id": "a_power_mech", "trackId": "stem_technical", "name": "Power Mechanics", "description": "Engines, vehicles and machines.", "tags": ["mechanics", "engineering", "hands_on"], "subjectIds": ["power_mechanics"]},
-    {"id": "a_aviation", "trackId": "stem_technical", "name": "Aviation", "description": "Aircraft and flight technology.", "tags": ["aviation", "engineering", "technology"], "subjectIds": ["aviation"]},
-    {"id": "a_media_tech", "trackId": "stem_technical", "name": "Media Technology", "description": "Technical side of media production.", "tags": ["media", "technology", "film"], "subjectIds": ["media_technology"]},
-
-    {"id": "a_literature", "trackId": "ss_languages", "name": "Literature in English", "description": "Reading, analysing and writing literature.", "tags": ["literature", "writing", "languages"], "subjectIds": ["literature_english"]},
-    {"id": "a_fasihi", "trackId": "ss_languages", "name": "Fasihi ya Kiswahili", "description": "Kiswahili literature.", "tags": ["literature", "languages", "culture"], "subjectIds": ["fasihi"]},
-    {"id": "a_foreign_lang", "trackId": "ss_languages", "name": "Foreign Languages", "description": "French, German, Arabic or Mandarin.", "tags": ["languages", "communication", "culture"], "subjectIds": ["french", "german", "arabic", "mandarin"]},
-    {"id": "a_indigenous_sign", "trackId": "ss_languages", "name": "Indigenous Languages and Sign Language", "description": "Kenyan indigenous languages and Kenyan Sign Language.", "tags": ["languages", "culture", "people"], "subjectIds": ["indigenous_language", "ksl_pathway"]},
-
-    {"id": "a_history", "trackId": "ss_humanities", "name": "History and Citizenship", "description": "The past and civic life.", "tags": ["history", "society", "law"], "subjectIds": ["history_citizenship"]},
-    {"id": "a_geography", "trackId": "ss_humanities", "name": "Geography", "description": "Places, people and the environment.", "tags": ["geography", "nature", "outdoor"], "subjectIds": ["geography"]},
-    {"id": "a_religious", "trackId": "ss_humanities", "name": "Religious Education", "description": "CRE, IRE or HRE.", "tags": ["faith", "society", "people"], "subjectIds": ["cre", "ire", "hre"]},
-    {"id": "a_business", "trackId": "ss_humanities", "name": "Business Studies", "description": "Enterprise, trade and finance.", "tags": ["business", "money", "entrepreneurial", "leadership"], "subjectIds": ["business_studies"]},
-
-    {"id": "a_music_dance", "trackId": "as_performing", "name": "Music and Dance", "description": "Performance, composition and dance.", "tags": ["music", "performing"], "subjectIds": ["music_dance"]},
-    {"id": "a_theatre_film", "trackId": "as_performing", "name": "Theatre and Film", "description": "Acting, directing and film-making.", "tags": ["drama", "film", "performing"], "subjectIds": ["theatre_film"]},
-
-    {"id": "a_fine_arts", "trackId": "as_visual", "name": "Fine Arts", "description": "Drawing, painting and sculpture.", "tags": ["visual", "creative"], "subjectIds": ["fine_arts"]},
-    {"id": "a_applied_arts", "trackId": "as_visual", "name": "Applied Arts", "description": "Design for everyday use.", "tags": ["design", "visual", "practical"], "subjectIds": ["applied_arts"]},
-    {"id": "a_crafts", "trackId": "as_visual", "name": "Crafts", "description": "Hand-made objects and materials.", "tags": ["crafts", "hands_on"], "subjectIds": ["crafts"]},
-    {"id": "a_time_media", "trackId": "as_visual", "name": "Time-Based Media", "description": "Animation, video and digital media art.", "tags": ["media", "film", "visual", "technology"], "subjectIds": ["time_based_media"]},
-
-    {"id": "a_sports_rec", "trackId": "as_sports", "name": "Sports and Recreation", "description": "Sport performance, coaching and recreation.", "tags": ["sports", "coaching", "fitness", "teamwork"], "subjectIds": ["sports_recreation"]}
+    {
+      "id": "a_biology",
+      "trackId": "stem_pure",
+      "name": "Biology",
+      "description": "Living things and the human body.",
+      "tags": [
+        "science",
+        "health",
+        "nature"
+      ],
+      "subjectIds": [
+        "biology"
+      ]
+    },
+    {
+      "id": "a_chemistry",
+      "trackId": "stem_pure",
+      "name": "Chemistry",
+      "description": "Substances, reactions and materials.",
+      "tags": [
+        "science",
+        "research",
+        "analytical"
+      ],
+      "subjectIds": [
+        "chemistry"
+      ]
+    },
+    {
+      "id": "a_physics",
+      "trackId": "stem_pure",
+      "name": "Physics",
+      "description": "Energy, forces and how the universe works.",
+      "tags": [
+        "science",
+        "maths",
+        "engineering",
+        "analytical"
+      ],
+      "subjectIds": [
+        "physics"
+      ]
+    },
+    {
+      "id": "a_mathematics",
+      "trackId": "stem_pure",
+      "name": "Mathematics",
+      "description": "Advanced mathematical reasoning.",
+      "tags": [
+        "maths",
+        "data",
+        "analytical",
+        "problem_solving"
+      ],
+      "subjectIds": [
+        "math_core"
+      ]
+    },
+    {
+      "id": "a_agriculture",
+      "trackId": "stem_applied",
+      "name": "Agriculture",
+      "description": "Crops, animals and food production.",
+      "tags": [
+        "agriculture",
+        "nature",
+        "outdoor",
+        "practical"
+      ],
+      "subjectIds": [
+        "agriculture"
+      ]
+    },
+    {
+      "id": "a_computer",
+      "trackId": "stem_applied",
+      "name": "Computer Studies",
+      "description": "Programming, data and digital systems.",
+      "tags": [
+        "computing",
+        "technology",
+        "data",
+        "problem_solving"
+      ],
+      "subjectIds": [
+        "computer_studies"
+      ]
+    },
+    {
+      "id": "a_home_science",
+      "trackId": "stem_applied",
+      "name": "Home Science",
+      "description": "Food, nutrition, clothing and the home.",
+      "tags": [
+        "food",
+        "health",
+        "care",
+        "practical"
+      ],
+      "subjectIds": [
+        "home_science"
+      ]
+    },
+    {
+      "id": "a_building",
+      "trackId": "stem_technical",
+      "name": "Building Construction",
+      "description": "Structures and the built environment.",
+      "tags": [
+        "building",
+        "engineering",
+        "design",
+        "hands_on"
+      ],
+      "subjectIds": [
+        "building_construction"
+      ]
+    },
+    {
+      "id": "a_electricity",
+      "trackId": "stem_technical",
+      "name": "Electricity",
+      "description": "Electrical systems and electronics.",
+      "tags": [
+        "electrical",
+        "engineering",
+        "problem_solving"
+      ],
+      "subjectIds": [
+        "electricity"
+      ]
+    },
+    {
+      "id": "a_power_mech",
+      "trackId": "stem_technical",
+      "name": "Power Mechanics",
+      "description": "Engines, vehicles and machines.",
+      "tags": [
+        "mechanics",
+        "engineering",
+        "hands_on"
+      ],
+      "subjectIds": [
+        "power_mechanics"
+      ]
+    },
+    {
+      "id": "a_aviation",
+      "trackId": "stem_technical",
+      "name": "Aviation",
+      "description": "Aircraft and flight technology.",
+      "tags": [
+        "aviation",
+        "engineering",
+        "technology"
+      ],
+      "subjectIds": [
+        "aviation"
+      ]
+    },
+    {
+      "id": "a_media_tech",
+      "trackId": "stem_technical",
+      "name": "Media Technology",
+      "description": "Technical side of media production.",
+      "tags": [
+        "media",
+        "technology",
+        "film"
+      ],
+      "subjectIds": [
+        "media_technology"
+      ]
+    },
+    {
+      "id": "a_literature",
+      "trackId": "ss_languages",
+      "name": "Literature in English",
+      "description": "Reading, analysing and writing literature.",
+      "tags": [
+        "literature",
+        "writing",
+        "languages"
+      ],
+      "subjectIds": [
+        "literature_english"
+      ]
+    },
+    {
+      "id": "a_fasihi",
+      "trackId": "ss_languages",
+      "name": "Fasihi ya Kiswahili",
+      "description": "Kiswahili literature.",
+      "tags": [
+        "literature",
+        "languages",
+        "culture"
+      ],
+      "subjectIds": [
+        "fasihi"
+      ]
+    },
+    {
+      "id": "a_foreign_lang",
+      "trackId": "ss_languages",
+      "name": "Foreign Languages",
+      "description": "French, German, Arabic or Mandarin.",
+      "tags": [
+        "languages",
+        "communication",
+        "culture"
+      ],
+      "subjectIds": [
+        "french",
+        "german",
+        "arabic",
+        "mandarin"
+      ]
+    },
+    {
+      "id": "a_indigenous_sign",
+      "trackId": "ss_languages",
+      "name": "Indigenous Languages and Sign Language",
+      "description": "Kenyan indigenous languages and Kenyan Sign Language.",
+      "tags": [
+        "languages",
+        "culture",
+        "people"
+      ],
+      "subjectIds": [
+        "indigenous_language",
+        "ksl_pathway"
+      ]
+    },
+    {
+      "id": "a_history",
+      "trackId": "ss_humanities",
+      "name": "History and Citizenship",
+      "description": "The past and civic life.",
+      "tags": [
+        "history",
+        "society",
+        "law"
+      ],
+      "subjectIds": [
+        "history_citizenship"
+      ]
+    },
+    {
+      "id": "a_geography",
+      "trackId": "ss_humanities",
+      "name": "Geography",
+      "description": "Places, people and the environment.",
+      "tags": [
+        "geography",
+        "nature",
+        "outdoor"
+      ],
+      "subjectIds": [
+        "geography"
+      ]
+    },
+    {
+      "id": "a_religious",
+      "trackId": "ss_humanities",
+      "name": "Religious Education",
+      "description": "CRE, IRE or HRE.",
+      "tags": [
+        "faith",
+        "society",
+        "people"
+      ],
+      "subjectIds": [
+        "cre",
+        "ire",
+        "hre"
+      ]
+    },
+    {
+      "id": "a_business",
+      "trackId": "ss_humanities",
+      "name": "Business Studies",
+      "description": "Enterprise, trade and finance.",
+      "tags": [
+        "business",
+        "money",
+        "entrepreneurial",
+        "leadership"
+      ],
+      "subjectIds": [
+        "business_studies"
+      ]
+    },
+    {
+      "id": "a_music_dance",
+      "trackId": "as_performing",
+      "name": "Music and Dance",
+      "description": "Performance, composition and dance.",
+      "tags": [
+        "music",
+        "performing"
+      ],
+      "subjectIds": [
+        "music_dance"
+      ]
+    },
+    {
+      "id": "a_theatre_film",
+      "trackId": "as_performing",
+      "name": "Theatre and Film",
+      "description": "Acting, directing and film-making.",
+      "tags": [
+        "drama",
+        "film",
+        "performing"
+      ],
+      "subjectIds": [
+        "theatre_film"
+      ]
+    },
+    {
+      "id": "a_fine_arts",
+      "trackId": "as_visual",
+      "name": "Fine Arts",
+      "description": "Drawing, painting and sculpture.",
+      "tags": [
+        "visual",
+        "creative"
+      ],
+      "subjectIds": [
+        "fine_arts"
+      ]
+    },
+    {
+      "id": "a_applied_arts",
+      "trackId": "as_visual",
+      "name": "Applied Arts",
+      "description": "Design for everyday use.",
+      "tags": [
+        "design",
+        "visual",
+        "practical"
+      ],
+      "subjectIds": [
+        "applied_arts"
+      ]
+    },
+    {
+      "id": "a_crafts",
+      "trackId": "as_visual",
+      "name": "Crafts",
+      "description": "Hand-made objects and materials.",
+      "tags": [
+        "crafts",
+        "hands_on"
+      ],
+      "subjectIds": [
+        "crafts"
+      ]
+    },
+    {
+      "id": "a_time_media",
+      "trackId": "as_visual",
+      "name": "Time-Based Media",
+      "description": "Animation, video and digital media art.",
+      "tags": [
+        "media",
+        "film",
+        "visual",
+        "technology"
+      ],
+      "subjectIds": [
+        "time_based_media"
+      ]
+    },
+    {
+      "id": "a_sports_rec",
+      "trackId": "as_sports",
+      "name": "Sports and Recreation",
+      "description": "Sport performance, coaching and recreation.",
+      "tags": [
+        "sports",
+        "coaching",
+        "fitness",
+        "teamwork"
+      ],
+      "subjectIds": [
+        "sports_recreation"
+      ]
+    }
   ],
   "subjects": [
-    {"id": "english", "name": "English", "kind": "CORE"},
-    {"id": "kiswahili", "name": "Kiswahili / Kenya Sign Language", "kind": "CORE"},
-    {"id": "math_core_essential", "name": "Mathematics (Core or Essential)", "kind": "CORE"},
-    {"id": "csl", "name": "Community Service Learning", "kind": "CORE"},
-    {"id": "pe", "name": "Physical Education", "kind": "CORE"},
-
-    {"id": "math_core", "name": "Core Mathematics", "kind": "PATHWAY"},
-    {"id": "biology", "name": "Biology", "kind": "PATHWAY"},
-    {"id": "chemistry", "name": "Chemistry", "kind": "PATHWAY"},
-    {"id": "physics", "name": "Physics", "kind": "PATHWAY"},
-    {"id": "agriculture", "name": "Agriculture", "kind": "PATHWAY"},
-    {"id": "computer_studies", "name": "Computer Studies", "kind": "PATHWAY"},
-    {"id": "home_science", "name": "Home Science", "kind": "PATHWAY"},
-    {"id": "building_construction", "name": "Building Construction", "kind": "PATHWAY"},
-    {"id": "electricity", "name": "Electricity", "kind": "PATHWAY"},
-    {"id": "power_mechanics", "name": "Power Mechanics", "kind": "PATHWAY"},
-    {"id": "aviation", "name": "Aviation", "kind": "PATHWAY"},
-    {"id": "media_technology", "name": "Media Technology", "kind": "PATHWAY"},
-    {"id": "literature_english", "name": "Literature in English", "kind": "PATHWAY"},
-    {"id": "fasihi", "name": "Fasihi ya Kiswahili", "kind": "PATHWAY"},
-    {"id": "french", "name": "French", "kind": "PATHWAY"},
-    {"id": "german", "name": "German", "kind": "PATHWAY"},
-    {"id": "arabic", "name": "Arabic", "kind": "PATHWAY"},
-    {"id": "mandarin", "name": "Mandarin Chinese", "kind": "PATHWAY"},
-    {"id": "indigenous_language", "name": "Indigenous Language", "kind": "PATHWAY"},
-    {"id": "ksl_pathway", "name": "Kenya Sign Language", "kind": "PATHWAY"},
-    {"id": "history_citizenship", "name": "History and Citizenship", "kind": "PATHWAY"},
-    {"id": "geography", "name": "Geography", "kind": "PATHWAY"},
-    {"id": "cre", "name": "Christian Religious Education", "kind": "PATHWAY"},
-    {"id": "ire", "name": "Islamic Religious Education", "kind": "PATHWAY"},
-    {"id": "hre", "name": "Hindu Religious Education", "kind": "PATHWAY"},
-    {"id": "business_studies", "name": "Business Studies", "kind": "PATHWAY"},
-    {"id": "music_dance", "name": "Music and Dance", "kind": "PATHWAY"},
-    {"id": "theatre_film", "name": "Theatre and Film", "kind": "PATHWAY"},
-    {"id": "fine_arts", "name": "Fine Arts", "kind": "PATHWAY"},
-    {"id": "applied_arts", "name": "Applied Arts", "kind": "PATHWAY"},
-    {"id": "crafts", "name": "Crafts", "kind": "PATHWAY"},
-    {"id": "time_based_media", "name": "Time-Based Media", "kind": "PATHWAY"},
-    {"id": "sports_recreation", "name": "Sports and Recreation", "kind": "PATHWAY"}
+    {
+      "id": "english",
+      "name": "English",
+      "kind": "CORE"
+    },
+    {
+      "id": "kiswahili",
+      "name": "Kiswahili / Kenya Sign Language",
+      "kind": "CORE"
+    },
+    {
+      "id": "math_core_essential",
+      "name": "Mathematics (Core or Essential)",
+      "kind": "CORE"
+    },
+    {
+      "id": "csl",
+      "name": "Community Service Learning",
+      "kind": "CORE"
+    },
+    {
+      "id": "pe",
+      "name": "Physical Education",
+      "kind": "CORE"
+    },
+    {
+      "id": "math_core",
+      "name": "Core Mathematics",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "biology",
+      "name": "Biology",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "chemistry",
+      "name": "Chemistry",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "physics",
+      "name": "Physics",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "agriculture",
+      "name": "Agriculture",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "computer_studies",
+      "name": "Computer Studies",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "home_science",
+      "name": "Home Science",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "building_construction",
+      "name": "Building Construction",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "electricity",
+      "name": "Electricity",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "power_mechanics",
+      "name": "Power Mechanics",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "aviation",
+      "name": "Aviation",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "media_technology",
+      "name": "Media Technology",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "literature_english",
+      "name": "Literature in English",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "fasihi",
+      "name": "Fasihi ya Kiswahili",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "french",
+      "name": "French",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "german",
+      "name": "German",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "arabic",
+      "name": "Arabic",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "mandarin",
+      "name": "Mandarin Chinese",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "indigenous_language",
+      "name": "Indigenous Language",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "ksl_pathway",
+      "name": "Kenya Sign Language",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "history_citizenship",
+      "name": "History and Citizenship",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "geography",
+      "name": "Geography",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "cre",
+      "name": "Christian Religious Education",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "ire",
+      "name": "Islamic Religious Education",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "hre",
+      "name": "Hindu Religious Education",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "business_studies",
+      "name": "Business Studies",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "music_dance",
+      "name": "Music and Dance",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "theatre_film",
+      "name": "Theatre and Film",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "fine_arts",
+      "name": "Fine Arts",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "applied_arts",
+      "name": "Applied Arts",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "crafts",
+      "name": "Crafts",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "time_based_media",
+      "name": "Time-Based Media",
+      "kind": "PATHWAY"
+    },
+    {
+      "id": "sports_recreation",
+      "name": "Sports and Recreation",
+      "kind": "PATHWAY"
+    }
   ]
 }

@@ -1,5 +1,7 @@
 package com.pathwayfit.app.ui.viewmodel
 
+import kotlinx.serialization.json.*
+
 import kotlinx.serialization.json.encodeToJsonElement
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -258,6 +260,8 @@ class EightFourFourViewModel(private val c: AppContainer) : ViewModel() {
         .stateIn(viewModelScope, SharingStarted.Eagerly, UniversityProfile())
     private val savedAnswers = userFlow.flatMapLatest { c.learnerData.answers(it.userId, system) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    val subjectRanking = savedAnswers.map { EightFourFourAssessmentBank.subjectRanking(it) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val completed: StateFlow<Boolean> = userFlow.flatMapLatest { c.learnerData.completed(it.userId, system) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
     val saved: StateFlow<List<SavedRecommendation>> = userFlow.flatMapLatest { c.learnerData.saved(it.userId) }
@@ -266,6 +270,8 @@ class EightFourFourViewModel(private val c: AppContainer) : ViewModel() {
 
     val analysisStage = MutableStateFlow(0)
     val analysisError = MutableStateFlow<String?>(null)
+    val analysisPreview = MutableStateFlow("")
+    val analysisCourseNames = MutableStateFlow<List<String>>(emptyList())
     val geminiResult = MutableStateFlow<com.pathwayfit.app.ai.GeminiAssessmentResult?>(null)
     private val analyzedCourses = MutableStateFlow<CourseRecommendationSet?>(null)
     private var analysisRunning = false
@@ -286,6 +292,7 @@ class EightFourFourViewModel(private val c: AppContainer) : ViewModel() {
     fun analyzeAnswers() = viewModelScope.launch {
         if (analysisRunning || geminiResult.value != null) return@launch
         analysisRunning = true
+        analysisPreview.value = ""; analysisCourseNames.value = emptyList()
         analysisError.value = null
         try {
             analysisStage.value = 1
@@ -299,7 +306,17 @@ class EightFourFourViewModel(private val c: AppContainer) : ViewModel() {
             val candidates = c.eightFourFourEngine.recommend(EightFourFourEngineInput(EightFourFourAssessmentBank.withPerformance(profile.value, a), assessment.questions, a, d, car))
             if (com.pathwayfit.app.ai.JuaGuideDemo.enabled) kotlinx.coroutines.delay(650)
             analysisStage.value = 3
-            val result = com.pathwayfit.app.ai.GeminiAssessmentService().analyze(EightFourFourAssessmentBank.withPerformance(profile.value, a), assessment.questions, a, candidates)
+            val result = com.pathwayfit.app.ai.GeminiAssessmentService().analyze(EightFourFourAssessmentBank.withPerformance(profile.value, a), assessment.questions, a, candidates) { event ->
+                when (event["type"]?.jsonPrimitive?.content) {
+                    "text" -> analysisPreview.value = event["text"]?.jsonPrimitive?.content.orEmpty()
+                    "course" -> {
+                        val id = event["course"]?.jsonObject?.get("courseId")?.jsonPrimitive?.content
+                        candidates.courses.firstOrNull { it.course.id == id }?.let { match ->
+                            analysisCourseNames.value = (analysisCourseNames.value + match.course.name).distinct()
+                        }
+                    }
+                }
+            }
             val selected = result.courseIds.map { id -> candidates.courses.first { it.course.id == id } }
             analyzedCourses.value = candidates.copy(courses = selected + candidates.courses.filter { it.course.id !in result.courseIds })
             geminiResult.value = result
@@ -352,7 +369,7 @@ class EightFourFourViewModel(private val c: AppContainer) : ViewModel() {
     }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
     val guidePremium = c.premium.access
 
-    suspend fun askJuaGuide(messages: List<Pair<String, String>>, attachment: kotlinx.serialization.json.JsonObject? = null): com.pathwayfit.app.ai.GuideReply {
+    suspend fun askJuaGuide(messages: List<Pair<String, String>>, attachment: kotlinx.serialization.json.JsonObject? = null, onText: (String) -> Unit = {}): com.pathwayfit.app.ai.GuideReply {
         val learner = user.value ?: error("Please sign in to use JuaGuide.")
         check(com.pathwayfit.app.ai.JuaGuideDemo.enabled || c.premium.access.value.isPremium || !c.store.boolFlow("guide_trial_${learner.userId}").first()) { "Your free JuaGuide question has been used. Upgrade to Premium to continue." }
         val answers = c.learnerData.answers(learner.userId, system).first()
@@ -368,7 +385,7 @@ class EightFourFourViewModel(private val c: AppContainer) : ViewModel() {
             }.orEmpty()))
             put("recommendations", kotlinx.serialization.json.Json.encodeToJsonElement(results.value?.courses?.take(5)?.map { it.course.name }.orEmpty()))
         }
-        val reply = com.pathwayfit.app.ai.JuaGuideService.reply(messages, context)
+        val reply = com.pathwayfit.app.ai.JuaGuideService.reply(messages, context, onText)
         if (reply.completed && !com.pathwayfit.app.ai.JuaGuideDemo.enabled) c.store.putBool("guide_trial_${learner.userId}", true)
         return reply
     }

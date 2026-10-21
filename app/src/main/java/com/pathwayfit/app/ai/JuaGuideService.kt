@@ -10,14 +10,14 @@ import java.net.URL
 data class GuideReply(val text: String, val completed: Boolean)
 
 object JuaGuideService {
-    suspend fun reply(messages: List<Pair<String, String>>, context: JsonObject): GuideReply = withContext(Dispatchers.IO) {
+    suspend fun reply(messages: List<Pair<String, String>>, context: JsonObject, onText: (String) -> Unit = {}): GuideReply = withContext(Dispatchers.IO) {
 
         if (JuaGuideDemo.enabled) return@withContext JuaGuideDemo.chat(messages, context)
         val payload = buildJsonObject {
             put("context", context)
             put("messages", buildJsonArray { messages.takeLast(20).forEach { (role, text) -> add(buildJsonObject { put("role", role); put("text", text) }) } })
         }
-        val json = GeminiConnection.call("chat", payload)
+        val json = GeminiConnection.stream("chat", payload) { event -> if (event["type"]?.jsonPrimitive?.content == "text") onText(event["text"]?.jsonPrimitive?.content.orEmpty()) }
         GuideReply(json.getValue("reply").jsonPrimitive.content.also { check(it.isNotBlank()) }, json.getValue("completed").jsonPrimitive.boolean)
     }
 }

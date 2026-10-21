@@ -38,19 +38,20 @@ fun JuaGuideScreen(vm: EightFourFourViewModel, onUpgrade: () -> Unit) {
         var attachment by remember { mutableStateOf<JsonObject?>(null) }
         var attachmentLabel by remember { mutableStateOf<String?>(null) }
         var input by remember { mutableStateOf("") }
+        var streamingText by remember { mutableStateOf("") }
         var busy by remember { mutableStateOf(false) }
         var error by remember { mutableStateOf<String?>(null) }
         val scope = rememberCoroutineScope()
         val list = rememberLazyListState()
         fun request() {
             if (busy || locked) { if (locked) onUpgrade(); return }
-            busy = true; error = null
+            busy = true; error = null; streamingText = ""
             scope.launch {
-                try { val reply = vm.askJuaGuide(messages.toList(), attachment); messages.add("model" to reply.text) }
+                try { val reply = vm.askJuaGuide(messages.toList(), attachment) { text -> scope.launch { streamingText = text } }; messages.add("model" to reply.text) }
                 catch (e: Exception) {
                     if (e is kotlinx.coroutines.CancellationException) throw e
                     error = e.message ?: "Unable to get a reply. Please retry."
-                } finally { busy = false }
+                } finally { busy = false; streamingText = "" }
             }
         }
         fun send(text: String) {
@@ -110,6 +111,7 @@ fun JuaGuideScreen(vm: EightFourFourViewModel, onUpgrade: () -> Unit) {
                     }
                 }
                 item {
+                    if (streamingText.isNotBlank()) Text(streamingText, modifier = Modifier.padding(14.dp))
                     if (busy) Row(verticalAlignment = Alignment.CenterVertically) { CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp); Text("  JuaGuide is thinking…") }
                     error?.let { Text(it, color = MaterialTheme.colorScheme.error); TextButton(onClick = { request() }) { Text("Retry") } }
                 }

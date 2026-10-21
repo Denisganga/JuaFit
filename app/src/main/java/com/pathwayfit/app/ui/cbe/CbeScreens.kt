@@ -433,7 +433,7 @@ fun CbeRecommendationDetailScreen(
                 }
                 if (expanded) {
                     Spacer(Modifier.height(12.dp))
-                    Text("Areas and learning subjects", style = MaterialTheme.typography.titleSmall)
+                    Text("Learning areas", style = MaterialTheme.typography.titleSmall)
                     ref?.areasOf(track.id).orEmpty().forEach { area ->
                         Text(area.name, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 10.dp))
                         Text(ref?.subjectsOf(area).orEmpty().joinToString { it.name }, style = MaterialTheme.typography.bodySmall)
@@ -556,7 +556,7 @@ fun CbeExplorerScreen(vm: CbeViewModel, onBack: (() -> Unit)?) {
                     Text(area.name, style = MaterialTheme.typography.titleLarge)
                     Text(area.description, style = MaterialTheme.typography.bodyMedium)
                     Spacer(Modifier.height(12.dp))
-                    Text("Subjects and learning areas", style = MaterialTheme.typography.titleSmall)
+                    Text("Learning areas", style = MaterialTheme.typography.titleSmall)
                     r.subjectsOf(area).forEach { Text(it.name, Modifier.padding(top = 4.dp), style = MaterialTheme.typography.bodySmall) }
                 }
             }
@@ -669,7 +669,7 @@ fun CbePathwayMapScreen(vm: CbeViewModel, onBack: () -> Unit) {
         } else {
             item { Text("Tap any stage to see more.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             item { PfCard { CareerMapView(PremiumInsightBuilder.cbePathwayMap(profile.grade, set, r, c, uni)) } }
-            item { SectionTitle("Subject focus") }
+            item { SectionTitle("Learning focus") }
             PremiumInsightBuilder.cbeSubjectGuidance(set, r).forEach { ins ->
                 item { PfCard { Text(ins.title, style = MaterialTheme.typography.titleSmall); Text(ins.body, style = MaterialTheme.typography.bodySmall) } }
             }

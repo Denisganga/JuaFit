@@ -73,7 +73,7 @@ document.addEventListener('submit',async e=>{
 authDialog.addEventListener('cancel',e=>{if(authBusy)e.preventDefault();});
 function theme(){const dark=document.documentElement.dataset.theme==='dark';document.querySelector('.theme-toggle').innerHTML=icon(dark?'sun':'moon');document.querySelector('.theme-toggle').setAttribute('aria-label',`Switch to ${dark?'light':'dark'} mode`);document.querySelector('meta[name=theme-color]').content=dark?'#08182c':'#f1f5fa';}
 function updateCount(){document.querySelector('#plan-count').textContent=plan.length;}
-function renderPathways(){
+function renderPathways(){if(!document.querySelector('#pathway-panel'))return;
  const cbe=system==='cbe';
  document.querySelectorAll('[role=tab]').forEach(t=>t.setAttribute('aria-selected',t.dataset.system===system));
  const panel=document.querySelector('#pathway-panel');panel.setAttribute('aria-labelledby',`tab-${system}`);

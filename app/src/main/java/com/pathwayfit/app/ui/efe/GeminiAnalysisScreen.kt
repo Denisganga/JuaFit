@@ -27,6 +27,7 @@ fun GeminiAnalysisScreen(vm: EightFourFourViewModel, onReady: () -> Unit) {
     val palette = careerfitPalette
 
     val stage by vm.analysisStage.collectAsState()
+    val initialResults by vm.results.collectAsState()
     val preview by vm.analysisPreview.collectAsState()
     val courseNames by vm.analysisCourseNames.collectAsState()
     val error by vm.analysisError.collectAsState()
@@ -35,12 +36,13 @@ fun GeminiAnalysisScreen(vm: EightFourFourViewModel, onReady: () -> Unit) {
     val ink = palette.color(0xFF080C35)
     val muted = palette.color(0xFF405D8E)
     val blue = palette.color(0xFF0064F5)
-    if (preview.isNotBlank()) {
+    if (preview.isNotBlank() || stage >= 2) {
         Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding().padding(20.dp)) {
-            Text("Your recommendations are appearing", style = MaterialTheme.typography.titleLarge)
+            Text("Your course matches", style = MaterialTheme.typography.titleLarge)
             androidx.compose.foundation.lazy.LazyColumn(Modifier.weight(1f)) {
-                item { Text(preview, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(vertical = 16.dp)) }
-                items(courseNames.size) { i -> Text("${i+1}. ${courseNames[i]}", modifier = Modifier.padding(vertical = 10.dp)) }
+                item { Text(preview.ifBlank { "Your initial matches are ready. JuaGuide is personalizing the explanations…" }, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(vertical = 16.dp)) }
+                val visibleNames = courseNames.ifEmpty { initialResults?.courses.orEmpty().take(5).map { it.course.name } }
+                items(visibleNames.size) { i -> Text("${i+1}. ${visibleNames[i]}", modifier = Modifier.padding(vertical = 10.dp)) }
                 item { Text("Preparing the remaining details…", style = MaterialTheme.typography.bodyMedium) }
                 if (error != null) item { Text(error!!); Button(onClick = { vm.analyzeAnswers() }) { Text("Retry") } }
             }

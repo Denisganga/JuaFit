@@ -35,7 +35,7 @@ Use values from the Firebase Web app's firebaseConfig object, not Android google
 
 For local live-Firebase testing, set the environment variables, run `npm run build`, then `node serve.mjs --dist`. The source preview (`npm run dev`) reads the local public `config.js` instead. SDK modules load from Firebase's official CDN only when real Firebase is configured.
 
-Live AI still requires a separate protected Vercel endpoint. JuaGuide currently offers preset quick guidance, not live AI.
+JuaGuide, course analysis and sourced course information run as Vercel functions. Responses stream incrementally. Set GEMINI_API_KEY and GEMINI_MODEL on Vercel; never expose them in browser configuration.
 
 ## Validation
 
@@ -65,3 +65,5 @@ To upload without Git, use the supplied ZIP with Vercel CLI from its extracted d
 
 
 JuaGuide now supports typed chat and PDF/image academic results (3 MB maximum). On Vercel set server-only GEMINI_API_KEY and GEMINI_MODEL, then redeploy. The API runs at /api/chat; never put the provider key in PUBLIC variables. The static local preview cannot run Python serverless functions. Messages and optional results are sent to the guidance service when Send is pressed. Firebase authentication and server-enforced premium limits still need production integration.
+
+CBE uses the three Ministry pathways and ranked alignment percentages. Selected KCSE subjects show interest/strength alignment percentages, not exam scores. University offerings, admission requirements and career progression have source-backed lookup controls. Source-backed AI output still requires checking the linked institution for the relevant intake.

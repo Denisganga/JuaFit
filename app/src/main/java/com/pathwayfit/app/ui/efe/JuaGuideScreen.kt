@@ -8,6 +8,7 @@ import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -85,7 +86,15 @@ fun JuaGuideScreen(vm: EightFourFourViewModel, onUpgrade: () -> Unit) {
                 finally { busy = false }
             }
         }
-        LaunchedEffect(messages.size, busy, error, imeBottom) { list.animateScrollToItem(if (busy || error != null) messages.size + 1 else messages.size) }
+        LaunchedEffect(messages.size, busy, error, imeBottom, streamingText.length) {
+            // Keep the newest generated lines above the composer, including long replies.
+            val latest = messages.size + 1
+            list.animateScrollToItem(latest)
+            list.layoutInfo.visibleItemsInfo.lastOrNull { it.index == latest }?.let { item ->
+                val overflow = item.offset + item.size - list.layoutInfo.viewportEndOffset
+                if (overflow > 0) list.animateScrollBy(overflow.toFloat())
+            }
+        }
         Column(Modifier.fillMaxSize().statusBarsPadding().imePadding().padding(16.dp)) {
             Text("JuaGuide", style = MaterialTheme.typography.headlineMedium)
             if (com.pathwayfit.app.ai.JuaGuideDemo.enabled) Text("AI Preview", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)

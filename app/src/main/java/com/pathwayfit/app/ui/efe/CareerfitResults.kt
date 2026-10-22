@@ -138,6 +138,14 @@ fun CareerfitCourseScreen(vm: EightFourFourViewModel, courseId: String, onBack: 
         if(section != null && match != null) {
             factsBusy = true
             try {
+                val printed = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    com.pathwayfit.app.ai.KuccpsCatalogue.facts(factContext, courseId, section)
+                }
+                if (printed != null) {
+                    facts = printed
+                    factSources = listOf("KUCCPS 2025/2026 source PDF" to "https://juafit-website.vercel.app/assets/kuccps-degree-programmes-2025.pdf")
+                    return@LaunchedEffect
+                }
                 val result = com.pathwayfit.app.ai.GeminiConnection.stream("course-facts", kotlinx.serialization.json.buildJsonObject {
                     put("course", kotlinx.serialization.json.JsonPrimitive(match.course.name)); put("section", kotlinx.serialization.json.JsonPrimitive(section))
                 }) { event ->

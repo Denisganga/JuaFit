@@ -178,3 +178,22 @@ class GroundingEvidenceTests(unittest.TestCase):
         self.assertNotIn('Unsupported',result['text'])
         self.assertNotIn('Blog',result['text'])
         self.assertEqual(1,len(result['sources']))
+
+class KuccpsSourceTests(unittest.TestCase):
+    def test_official_programme_requirements_do_not_need_ai_key(self):
+        from server import course_facts
+        with patch('server.urlopen', side_effect=AssertionError('Source lookup must not call AI')):
+            result = course_facts({'course': 'Architecture', 'section': 'requirements'}, '', '')
+        self.assertIn('1063102', result['text'])
+        self.assertIn('MAT A(121):C+', result['text'])
+        self.assertNotIn('38.365', result['text'])
+        self.assertIn('2025/2026', result['text'])
+
+    def test_guidance_catalogue_contains_only_real_imported_records(self):
+        from server import kuccps_context
+        source = kuccps_context()
+        self.assertEqual('2025/2026', source['edition'])
+        self.assertEqual(24, len(source['examplesByCourseFamily']))
+        for records in source['examplesByCourseFamily'].values():
+            self.assertTrue(records)
+            self.assertTrue(all(r['code'] and 1 <= r['page'] <= 78 for r in records))

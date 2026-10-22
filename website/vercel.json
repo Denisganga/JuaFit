@@ -23,7 +23,7 @@
   "functions": {
     "api/*.py": {
       "maxDuration": 120,
-      "includeFiles": "server.py"
+      "includeFiles": "{server.py,kuccps_2025.json}"
     }
   },
   "rewrites": [

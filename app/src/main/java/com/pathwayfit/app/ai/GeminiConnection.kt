@@ -130,7 +130,7 @@ object GeminiConnection {
                 429 -> "JuaGuide usage limit reached. Please try again later."
                 else -> "JuaGuide connection failed (HTTP $code). Please retry."
             } }
-            return Json.parseToJsonElement(connection.inputStream.bufferedReader().use { it.readText() }).jsonObject.also { cacheFact(cacheKey, it) }
+            return Json.parseToJsonElement(connection.inputStream.bufferedReader().use { it.readText() }).jsonObject
         } finally { connection.disconnect() }
     }
 }

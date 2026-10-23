@@ -74,19 +74,18 @@ fun CareerfitRecommendationsScreen(vm: EightFourFourViewModel, onOpen: (String) 
 
     val results by vm.results.collectAsState()
     val ai by vm.geminiResult.collectAsState()
-    val subjects by vm.subjectRanking.collectAsState()
     ResultFrame {
         Text("Your Personalized\nRecommendations", color = ResultInk, fontSize = 24.sp, lineHeight = 29.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         if (com.pathwayfit.app.ai.JuaGuideDemo.enabled) Text("AI Preview • Personalized guidance", color = ResultMuted, fontSize = 12.sp)
         Spacer(Modifier.height(9.dp))
-        Text("Based on your profile and assessment, here are the top 5 career/course pathways for you.", color = ResultMuted, fontSize = 15.sp, lineHeight = 21.sp, textAlign = TextAlign.Center)
+        Text("Based on your profile and assessment, here are your top 5 courses, ranked by suitability.", color = ResultMuted, fontSize = 15.sp, lineHeight = 21.sp, textAlign = TextAlign.Center)
         Spacer(Modifier.height(15.dp))
         ai?.summary?.takeIf { it.isNotBlank() }?.let { summary ->
             Surface(color = palette.color(0xFFEAF4FF), shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 14.dp)) {
                 Text(summary, color = ResultInk, fontSize = 16.sp, lineHeight = 23.sp, modifier = Modifier.padding(14.dp))
             }
         }
-        val courses = results?.courses.orEmpty().take(5)
+        val courses = results?.courses.orEmpty().sortedByDescending { it.score }.take(5)
         if (courses.isEmpty()) Button(onClick = onStart) { Text("Take Assessment") }
         courses.forEachIndexed { i, match ->
             Surface(onClick = { onOpen(match.course.id) }, color = palette.color(0xFFFAFDFF), shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp,palette.color(0xFFDEEBFB)), modifier = Modifier.fillMaxWidth().padding(bottom = 9.dp)) {
@@ -97,7 +96,7 @@ fun CareerfitRecommendationsScreen(vm: EightFourFourViewModel, onOpen: (String) 
                     Icon(if (i == 0) Icons.Outlined.MenuBook else if (i == 2) Icons.Outlined.Computer else if (i == 4) Icons.Outlined.WorkOutline else Icons.Outlined.BarChart, null, tint = ResultBlue, modifier = Modifier.padding(horizontal = 12.dp).size(28.dp))
                     Column(Modifier.weight(1f)) {
                         Text(match.course.name, color = ResultInk, fontSize = 16.sp, lineHeight = 21.sp, fontWeight = FontWeight.Bold)
-                        Text("Recommendation #${i + 1}", color = palette.color(0xFF008448), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                        Text("${match.percent}% suitability", color = palette.color(0xFF008448), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                     }
                     Icon(Icons.Outlined.ChevronRight,null,tint=ResultBlue,modifier=Modifier.size(20.dp))
                 }
@@ -106,13 +105,8 @@ fun CareerfitRecommendationsScreen(vm: EightFourFourViewModel, onOpen: (String) 
         Surface(color=palette.color(0xFFE9F5FF),shape=RoundedCornerShape(14.dp)) {
             Row(Modifier.padding(14.dp),verticalAlignment=Alignment.CenterVertically) {
                 Icon(Icons.Outlined.EmojiEvents,null,tint=ResultBlue,modifier=Modifier.size(32.dp))
-                Text("These recommendations are based on your interests, strengths and goals. You can explore each option to learn more.",color=ResultMuted,fontSize = 13.sp,lineHeight = 18.sp,modifier=Modifier.padding(start=14.dp))
+                Text("Suitability reflects your academic profile, interests and strengths. It is not an admission probability.",color=ResultMuted,fontSize = 13.sp,lineHeight = 18.sp,modifier=Modifier.padding(start=14.dp))
             }
-        }
-        if(subjects.isNotEmpty()) {
-            Text("Your subject alignment ranking", color=ResultInk, fontSize=19.sp, fontWeight=FontWeight.Bold, modifier=Modifier.padding(top=16.dp))
-            subjects.forEachIndexed { i, (name, percent) -> Text("${i+1}. $name — $percent% alignment", color=ResultMuted, modifier=Modifier.padding(vertical=6.dp)) }
-            Text("Alignment with your interests and strengths; not exam marks or admission chances.",color=ResultMuted,fontSize=12.sp)
         }
         if (ai != null) Text("Personalized by JuaGuide. Recommendations are ranked guidance, not admission guarantees.",color=ResultMuted,fontSize = 11.sp,modifier=Modifier.padding(top=8.dp))
     }

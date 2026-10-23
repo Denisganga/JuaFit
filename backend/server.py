@@ -224,6 +224,34 @@ def kuccps_facts(payload):
     return {'text': '\n\n'.join(lines), 'sources': [{'title': 'KUCCPS 2025/2026 degree programmes (source PDF)', 'uri': 'https://juafit-website.vercel.app/assets/kuccps-degree-programmes-2025.pdf'}]}
 
 
+from collections import OrderedDict
+from threading import RLock
+from time import monotonic
+from functools import wraps
+_FACT_CACHE = OrderedDict()
+_FACT_LOCK = RLock()
+
+def cached_course_facts(function):
+    @wraps(function)
+    def cached(payload, key, model, emit=None):
+        cache_key = (model, str(payload.get('course', '')).strip().casefold(), payload.get('section'))
+        with _FACT_LOCK:
+            entry = _FACT_CACHE.get(cache_key)
+            if entry and entry[0] > monotonic():
+                _FACT_CACHE.move_to_end(cache_key)
+                result = json.loads(entry[1])
+                if emit: emit({'type': 'text', 'text': result['text']})
+                return result
+            _FACT_CACHE.pop(cache_key, None)
+        result = function(payload, key, model, emit)
+        if result.get('sources') and result.get('text'):
+            with _FACT_LOCK:
+                _FACT_CACHE[cache_key] = (monotonic() + 86400, json.dumps(result))
+                while len(_FACT_CACHE) > 128: _FACT_CACHE.popitem(last=False)
+        return result
+    return cached
+
+@cached_course_facts
 def course_facts(payload, key, model, emit=None):
     name = str(payload.get('course', ''))[:200]
     section = payload.get('section')

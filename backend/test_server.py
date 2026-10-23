@@ -197,3 +197,28 @@ class KuccpsSourceTests(unittest.TestCase):
         for records in source['examplesByCourseFamily'].values():
             self.assertTrue(records)
             self.assertTrue(all(r['code'] and 1 <= r['page'] <= 78 for r in records))
+
+class PublicFactCacheTests(unittest.TestCase):
+    def test_repeat_lookup_skips_provider_and_replays_text(self):
+        from server import cached_course_facts, _FACT_CACHE
+        _FACT_CACHE.clear()
+        provider = unittest.mock.Mock(return_value={'text':'Verified fact','sources':[{'title':'Official'}]})
+        cached = cached_course_facts(provider)
+        payload={'course':'Cache test','section':'requirements'}
+        cached(payload,'key','model')
+        events=[]
+        result=cached(payload,'key','model',events.append)
+        self.assertEqual(1,provider.call_count)
+        self.assertEqual('Verified fact',result['text'])
+        self.assertEqual('text',events[0]['type'])
+        cached(payload,'key','different-model')
+        self.assertEqual(2,provider.call_count)
+        _FACT_CACHE.clear()
+
+    def test_unverified_results_are_not_cached(self):
+        from server import cached_course_facts, _FACT_CACHE
+        _FACT_CACHE.clear()
+        provider=unittest.mock.Mock(return_value={'text':'Not confirmed','sources':[]})
+        cached=cached_course_facts(provider)
+        for _ in range(2): cached({'course':'Missing','section':'requirements'},'key','model')
+        self.assertEqual(2,provider.call_count)

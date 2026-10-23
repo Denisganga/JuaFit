@@ -1,3 +1,4 @@
+import {cacheKey,readCache,writeCache} from './response-cache.js';
 import config from './config.js';
 import {verifiedCourseFacts} from './kuccps.js';
 import {hasFirebaseConfig,registerAccount,loginAccount,resetPassword,logoutAccount,observeAccount,authError} from './auth.js';
@@ -93,12 +94,18 @@ function renderQuestion(){
 function option(index){const q=qs()[step];const a=answers[q.id]||{selected:[],text:''};if(q.id==='education'&&!a.selected.includes(index)){delete answers.performance;delete answers.subjects;}if(q.multi===1)a.selected=[index];else if(a.selected.includes(index))a.selected=a.selected.filter(i=>i!==index);else if(a.selected.length<q.multi)a.selected.push(index);else{document.querySelector('#question-error').textContent=`Choose up to ${q.multi}. Deselect one to change it.`;return;}answers[q.id]=a;document.querySelectorAll('.option').forEach(el=>{const selected=a.selected.includes(Number(el.dataset.index));el.setAttribute('aria-checked',selected);el.querySelector('.option-marker').innerHTML=selected?icon('check'):'';});document.querySelector('#answer-text').hidden=!a.selected.includes(q.options.length);document.querySelector('#question-error').textContent='';}
 function next(){const q=qs()[step],a=answers[q.id]||{selected:[],text:''};a.text=document.querySelector('#answer-text').value.trim();answers[q.id]=a;if(q.performance&&!answers.education?.selected?.includes(1)){const grade=document.querySelector('#performance-grade').value;a.selected=grade===''?[]:[Number(grade)];}const invalid=!validAnswer(q,a,Boolean(answers.education?.selected?.includes(1)));if(invalid){document.querySelector('#question-error').textContent=q.performance?'Select your KCSE mean grade.':q.min?'Select 3–4 subjects to continue.':a.selected.length?'Please add your other answer.':'Choose an option to continue.';return;}if(step<qs().length-1){step++;renderQuestion();}else finish();}
 async function streamRequest(path,payload,onEvent,signal){
+ const key=await cacheKey(path,payload,currentUser?.uid||currentUser?.id||currentUser?.email||'');
+ let store;try{store=path==='/api/course-facts'?localStorage:sessionStorage;}catch{}
+ const cached=store&&readCache(store,key);
+ if(signal?.aborted)throw new DOMException('Aborted','AbortError');
+ if(cached){onEvent({type:'text',text:cached.summary||cached.text||''});return cached;}
+
  const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,stream:true}),signal});
  if(!response.ok)throw Error('JuaGuide could not connect. Please retry.');
  const reader=response.body.getReader(),decoder=new TextDecoder();let buffer='',result;
  const consume=line=>{if(!line.trim())return;const event=JSON.parse(line);if(event.type==='error')throw Error(event.error);if(event.type==='done')result=event.result;else onEvent(event);};
  while(true){const {done,value}=await reader.read();buffer+=decoder.decode(value||new Uint8Array(),{stream:!done});let i;while((i=buffer.indexOf('\n'))>=0){consume(buffer.slice(0,i));buffer=buffer.slice(i+1);}if(done)break;}
- consume(buffer);if(!result)throw Error('The response was interrupted. Please retry.');return result;
+ consume(buffer);if(!result)throw Error('The response was interrupted. Please retry.');if(store && (path!=='/api/course-facts'||result.sources?.length))writeCache(store,key,result,path==='/api/course-facts'?7*86400000:86400000);return result;
 }
 async function finish(){
  aiAssessment=null;analysisRequest?.abort();results=system==='cbe'?rankPathways(answers):rankCourses(answers);renderResults();

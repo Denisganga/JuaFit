@@ -47,7 +47,32 @@ object GeminiConnection {
         }, apiKey())
         "JuaGuide is connected"
     }
+    private fun factKey(path: String, payload: JsonObject): String? {
+        if (path != "course-facts") return null
+        val bytes = ("facts-v1-kuccps2025|" + BuildConfig.GEMINI_ANALYSIS_URL + "|" + payload).toByteArray()
+        return java.security.MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
+    }
+    private val factCache get() = context.getSharedPreferences("juafit_public_fact_cache", Context.MODE_PRIVATE)
+    private fun cachedFact(key: String?): JsonObject? {
+        if (key == null) return null
+        return runCatching {
+            val entry = Json.parseToJsonElement(factCache.getString(key, "")!!).jsonObject
+            if (entry.getValue("expires").jsonPrimitive.long > System.currentTimeMillis()) entry.getValue("value").jsonObject
+            else { factCache.edit().remove(key).apply(); null }
+        }.getOrNull()
+    }
+    private fun cacheFact(key: String?, result: JsonObject) {
+        if (key == null || result["sources"]?.jsonArray.isNullOrEmpty()) return
+        runCatching {
+            if (factCache.all.size >= 100) factCache.edit().clear().apply()
+            factCache.edit().putString(key, buildJsonObject {
+                put("expires", System.currentTimeMillis() + 7 * 86400000L); put("value", result)
+            }.toString()).apply()
+        }
+    }
     suspend fun call(path: String, payload: JsonObject): JsonObject = withContext(Dispatchers.IO) {
+        val cacheKey = factKey(path, payload)
+        cachedFact(cacheKey)?.let { return@withContext it }
         val base = BuildConfig.GEMINI_ANALYSIS_URL.trimEnd('/')
         check(base.startsWith("https://")) { "JuaGuide is being connected. Please try again once the service is available." }
         val connection = URL("$base/$path").openConnection() as HttpURLConnection
@@ -58,11 +83,13 @@ object GeminiConnection {
             connection.outputStream.use { it.write(payload.toString().toByteArray(Charsets.UTF_8)) }
             val code = connection.responseCode
             check(code == 200) { if(code == 429) "JuaGuide is busy. Please try again shortly." else "JuaGuide could not complete this request. Please retry." }
-            Json.parseToJsonElement(connection.inputStream.bufferedReader().use { it.readText() }).jsonObject
+            Json.parseToJsonElement(connection.inputStream.bufferedReader().use { it.readText() }).jsonObject.also { cacheFact(cacheKey, it) }
         } finally { connection.disconnect() }
     }
 
     suspend fun stream(path: String, payload: JsonObject, onEvent: (JsonObject) -> Unit): JsonObject = withContext(Dispatchers.IO) {
+        val cacheKey = factKey(path, payload)
+        cachedFact(cacheKey)?.let { return@withContext it }
         val base = BuildConfig.GEMINI_ANALYSIS_URL.trimEnd('/')
         check(base.startsWith("https://")) { "JuaGuide is not connected yet." }
         val connection = URL("$base/$path").openConnection() as HttpURLConnection
@@ -84,7 +111,7 @@ object GeminiConnection {
                     }
                 }
             }
-            result ?: error("Response interrupted. Please retry.")
+            (result ?: error("Response interrupted. Please retry.")).also { cacheFact(cacheKey, it) }
         } finally { connection.disconnect() }
     }
 
@@ -103,7 +130,7 @@ object GeminiConnection {
                 429 -> "JuaGuide usage limit reached. Please try again later."
                 else -> "JuaGuide connection failed (HTTP $code). Please retry."
             } }
-            return Json.parseToJsonElement(connection.inputStream.bufferedReader().use { it.readText() }).jsonObject
+            return Json.parseToJsonElement(connection.inputStream.bufferedReader().use { it.readText() }).jsonObject.also { cacheFact(cacheKey, it) }
         } finally { connection.disconnect() }
     }
 }

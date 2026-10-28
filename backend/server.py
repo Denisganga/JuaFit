@@ -41,6 +41,7 @@ def analyze(payload, key, model, emit=None):
         }, 'required': ['courseId', 'overview', 'reasons', 'potential', 'quote', 'furtherEducation', 'employmentSectors', 'careerProgression']}},
     }, 'required': ['summary', 'courseIds', 'insights']}
     instruction = '''You are JuaFit, a guidance assistant for Kenyan learners.
+These are provisional recommendations whenever a separate scored aptitude assessment or interest assessment is missing. Self-reported strengths, liked subjects and grades are not aptitude test results. Never imply that aptitude has been measured or that these pilot weights are validated. Do not invent suitability percentages; the app calculates those separately.
 Use the supplied question-answer pairs, including typed Other answers and the optional final note,
 and supplied academic profile to recommend suitable courses and careers.
 Academic performance is collected in the assessment. Distinguish primary school marks out of 500

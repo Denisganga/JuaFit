@@ -16,13 +16,18 @@ import com.pathwayfit.app.core.model.UniversityProfile
 
 /** Configurable 8-4-4 weights (defaults from the product spec). Re-normalised at runtime. */
 data class EightFourFourScoringWeights(
-    val academic: Float = 0.35f,
-    val subject: Float = 0.25f,
+    val academic: Float = 0.25f,
+    val subject: Float = 0.15f,
     val interest: Float = 0.15f,
-    val strength: Float = 0.10f,
-    val career: Float = 0.10f,
-    val preference: Float = 0.05f,
-)
+    val aptitude: Float = 0.20f,
+    val career: Float = 0.15f,
+    val preference: Float = 0.10f,
+) {
+    init {
+        val values = listOf(academic, subject, interest, aptitude, career, preference)
+        require(values.all { it.isFinite() && it >= 0f } && values.sum() > 0f) { "Weights must be finite, non-negative and have a positive total." }
+    }
+}
 
 data class EightFourFourEngineInput(
     val profile: UniversityProfile,
@@ -30,7 +35,11 @@ data class EightFourFourEngineInput(
     val answers: List<AssessmentAnswer>,
     val data: UniversityData,
     val careers: CareerData,
-)
+    // Results from a separate scored activity, never self-reported strengths.
+    val aptitudeScores: Map<String, Float> = emptyMap(),
+) {
+    init { require(aptitudeScores.values.all { it.isFinite() && it in 0f..1f }) }
+}
 
 data class CourseMatch(
     val course: Course,
@@ -50,7 +59,10 @@ data class CourseRecommendationSet(
     val estimatedMeanGrade: KcseGrade?,
     val hasGrades: Boolean,
     val generatedAt: Long = System.currentTimeMillis(),
+    val outstandingAssessments: List<String> = emptyList(),
+    val hasSuitabilityEvidence: Boolean = false,
 ) {
+    val provisional: Boolean get() = outstandingAssessments.isNotEmpty()
     val top: CourseMatch? get() = courses.firstOrNull()
 }
 
@@ -58,8 +70,8 @@ data class CourseRecommendationSet(
  * Scores university courses for an 8-4-4 learner from KCSE grades, the 8-4-4 career
  * assessment and stated preferences. Independent of the CBE engine.
  *
- * The academic factor is a PATHWAYFIT estimate of how strong the learner's grades are in
- * subjects commonly relevant to a course. It does not apply KUCCPS cluster formulas,
+ * Academic readiness uses the mean grade once; subject enjoyment uses separate questions.
+ * Self-reported strengths are not a scored aptitude test. This pilot does not apply KUCCPS cluster formulas,
  * minimum requirements or cut-off points, and must never be presented as eligibility.
  */
 class EightFourFourRecommendationEngine(
@@ -80,13 +92,6 @@ class EightFourFourRecommendationEngine(
 
     fun signals(input: EightFourFourEngineInput): SignalProfile {
         val b = SignalProfile.Builder().addAnswers(input.questions, input.answers)
-        input.profile.careerInterests.forEach { id ->
-            input.careers.career(id)?.let { b.addAll(SignalCategory.CAREER_INTEREST, it.tags, 0.8f) }
-        }
-        input.profile.preferredFields.forEach { field ->
-            input.data.courses.filter { it.field == field }.flatMap { it.tags }.distinct()
-                .forEach { b.add(SignalCategory.INTEREST, it, 0.3f) }
-        }
         return b.build()
     }
 
@@ -96,32 +101,23 @@ class EightFourFourRecommendationEngine(
         val mean = estimateMean(input.profile)
         val hasGrades = grades.isNotEmpty() || mean != null
 
-        val interest = s.of(SignalCategory.INTEREST, SignalCategory.ACADEMIC_PREFERENCE)
-        val strength = s.of(SignalCategory.STRENGTH, SignalCategory.COMPETENCY)
-        val career = s.of(SignalCategory.CAREER_INTEREST, SignalCategory.WORK_PREFERENCE, SignalCategory.PERSONAL_GOAL)
+        val interest = s.of(SignalCategory.INTEREST, SignalCategory.CAREER_INTEREST)
+        val subjectSignals = s.of(SignalCategory.ACADEMIC_PREFERENCE)
+        val careerBuilder = SignalProfile.Builder().addAnswers(input.questions.filter { it.id != "efe_v2_q9" && it.id != "efe_v2_q10" }, input.answers)
+        input.profile.careerInterests.forEach { id -> input.careers.career(id)?.let { careerBuilder.addAll(SignalCategory.PERSONAL_GOAL, it.tags) } }
+        val career = careerBuilder.build().of(SignalCategory.PERSONAL_GOAL)
+        val preferenceSignals = s.of(SignalCategory.WORK_PREFERENCE)
 
         val matches = input.data.courses.map { course ->
             val unis = input.data.universitiesFor(course.id).map { it.first }
             val careers = course.careerIds.mapNotNull { input.careers.career(it) }
 
-            // 1. Academic alignment (estimate, not eligibility)
-            val relevantPts = course.relevantSubjects.mapNotNull { grades[it] }
-            val academic: Float? = when {
-                !hasGrades -> null
-                relevantPts.isEmpty() -> (mean?.points ?: 6) / 12f * 0.85f
-                else -> 0.5f * ((mean?.points ?: relevantPts.average().toInt()) / 12f) + 0.5f * (relevantPts.average().toFloat() / 12f)
-            }
-            val academicEvidence = buildList {
-                mean?.let { add("Mean grade ${it.label}") }
-                course.relevantSubjects.filter { grades.containsKey(it) }
-                    .sortedByDescending { grades[it] }.take(3)
-                    .forEach { code -> add("${input.data.subject(code)?.name ?: code}: ${input.profile.subjectGrades.first { it.subjectCode == code }.grade.label}") }
-            }
-
-            // 2. Subject relevance
-            val subject: Float? = if (grades.isEmpty() || course.relevantSubjects.isEmpty()) null else
-                course.relevantSubjects.map { code -> ((grades[code] ?: 0) / 10f).coerceAtMost(1f) }.average().toFloat()
-            val taken = course.relevantSubjects.filter { grades.containsKey(it) }.mapNotNull { input.data.subject(it)?.name }
+            // Mean grade is used once. Subject enjoyment is a separate questionnaire measure.
+            val academic: Float? = mean?.points?.div(12f)
+            val academicEvidence = mean?.let { listOf("Mean grade ${it.label}; readiness estimate only") }.orEmpty()
+            val subject = Matching.coverage(course.tags, subjectSignals)
+            val taken = Matching.matchedLabels(course.tags, subjectSignals)
+            val aptitude = input.aptitudeScores[course.id]
 
             // 3–5. Interest, strength, career
             val careerCov = Matching.coverage(course.tags, career)
@@ -133,6 +129,7 @@ class EightFourFourRecommendationEngine(
 
             // 6. Preferences
             val prefs = mutableListOf<Float>()
+            Matching.coverage(course.tags, preferenceSignals)?.let { prefs += it }
             val prefEvidence = mutableListOf<String>()
             if (input.profile.preferredFields.isNotEmpty()) {
                 val hit = course.field in input.profile.preferredFields
@@ -155,9 +152,9 @@ class EightFourFourRecommendationEngine(
 
             val raw = listOf(
                 Matching.factor("academic", "Academic match", academic, weights.academic, academicEvidence),
-                Matching.factor("subject", "Subject match", subject, weights.subject, taken.take(4)),
+                Matching.factor("subject", "Subject enjoyment", subject, weights.subject, taken.take(4)),
                 Matching.factor("interest", "Interest match", Matching.coverage(course.tags, interest), weights.interest, Matching.matchedLabels(course.tags, interest)),
-                Matching.factor("strength", "Strength match", Matching.coverage(course.tags, strength), weights.strength, Matching.matchedLabels(course.tags, strength)),
+                Matching.factor("aptitude", "Separate aptitude assessment", aptitude, weights.aptitude, if (aptitude == null) emptyList() else listOf("Separate scored aptitude assessment")),
                 Matching.factor("career", "Career match", careerScore, weights.career,
                     (if (statedCareer) listOf("Leads toward a career you chose") else emptyList()) + Matching.matchedLabels(course.tags, career, 2)),
                 Matching.factor("preference", "Preference match", if (prefs.isEmpty()) null else prefs.average().toFloat(), weights.preference, prefEvidence),
@@ -169,6 +166,15 @@ class EightFourFourRecommendationEngine(
         val strengths = input.profile.subjectGrades.sortedByDescending { it.grade.points }.take(3)
             .map { "${input.data.subject(it.subjectCode)?.name ?: it.subjectCode} (${it.grade.label})" }
 
-        return CourseRecommendationSet(matches, strengths, mean, hasGrades)
+        val outstanding = buildList {
+            if (mean == null) add("Academic readiness (KCSE mean grade)")
+            if (subjectSignals.isEmpty()) add("Subject enjoyment questions")
+            if (interest.isEmpty()) add("Interest questions")
+            if (input.data.courses.any { it.id !in input.aptitudeScores }) add("Separate aptitude assessment (self-reported strengths do not count)")
+            if (career.isEmpty() && input.profile.careerInterests.isEmpty()) add("Career goals")
+            if (preferenceSignals.isEmpty() && input.profile.preferredFields.isEmpty() && input.profile.institutionTypes.isEmpty() && input.profile.preferredLocations.isEmpty()) add("Study and environment preferences")
+        }
+        return CourseRecommendationSet(matches, strengths, mean, hasGrades,
+            outstandingAssessments = outstanding, hasSuitabilityEvidence = interest.isNotEmpty() || input.aptitudeScores.isNotEmpty())
     }
 }

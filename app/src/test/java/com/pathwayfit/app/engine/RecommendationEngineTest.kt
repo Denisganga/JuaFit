@@ -72,4 +72,43 @@ class RecommendationEngineTest {
         assertEquals("Computing & IT", set.top?.course?.field)
         set.courses.forEach { assertTrue(it.percent in 0..100) }
     }
+
+    @Test fun holisticWeightsAreConfigurableAndInvalidWeightsAreRejected() {
+        val w = EightFourFourScoringWeights()
+        assertEquals(listOf(.25f,.15f,.15f,.20f,.15f,.10f), listOf(w.academic,w.subject,w.interest,w.aptitude,w.career,w.preference))
+        assertTrue(runCatching { EightFourFourScoringWeights(aptitude = -1f) }.isFailure)
+        assertTrue(runCatching { EightFourFourScoringWeights(academic = Float.NaN) }.isFailure)
+    }
+
+    @Test fun academicOnlyIsProvisionalAndCannotSupplySuitabilityEvidence() {
+        val set = EightFourFourRecommendationEngine().recommend(EightFourFourEngineInput(
+            UniversityProfile(meanGrade = KcseGrade.A), EightFourFourAssessmentBank.assessment.questions, emptyList(), uni, careers))
+        assertTrue(set.provisional)
+        assertTrue(!set.hasSuitabilityEvidence)
+        assertTrue(set.outstandingAssessments.any { it.contains("aptitude") })
+        assertTrue(set.outstandingAssessments.contains("Interest questions"))
+        assertEquals(1, set.courses.map { it.score }.distinct().size)
+    }
+
+    @Test fun selfReportedStrengthsDoNotCountAsAptitudeOrChangeOtherFactors() {
+        val input = EightFourFourEngineInput(UniversityProfile(), EightFourFourAssessmentBank.assessment.questions,
+            listOf(AssessmentAnswer("efe_v2_q5", setOf("3"))), uni, careers)
+        val baseline = EightFourFourRecommendationEngine().recommend(input)
+        val changed = EightFourFourRecommendationEngine().recommend(input.copy(answers = input.answers + AssessmentAnswer("efe_v2_q4", setOf("3", "5", "6"))))
+        assertEquals(baseline.courses, changed.courses)
+        assertTrue(changed.courses.all { it.factor("aptitude") == null })
+    }
+
+    @Test fun subjectEnjoymentIsSeparateFromAcademicGradesAndZeroAptitudeIsObserved() {
+        val input = EightFourFourEngineInput(UniversityProfile(meanGrade = KcseGrade.A), EightFourFourAssessmentBank.assessment.questions,
+            listOf(AssessmentAnswer("efe_v2_q3", setOf("MAT", "PHY", "CMP")), AssessmentAnswer("efe_v2_q5", setOf("3"))), uni, careers,
+            aptitudeScores = mapOf("c_cs" to 0f))
+        val a = EightFourFourRecommendationEngine().recommend(input)
+        val b = EightFourFourRecommendationEngine().recommend(input.copy(profile = UniversityProfile(meanGrade = KcseGrade.C)))
+        assertEquals(a.courses.first { it.course.id == "c_cs" }.factor("subject")!!.score,
+            b.courses.first { it.course.id == "c_cs" }.factor("subject")!!.score)
+        val cs = a.courses.first { it.course.id == "c_cs" }
+        assertEquals(0f, cs.factor("aptitude")!!.score)
+        assertEquals(1f, cs.factors.sumOf { it.weight.toDouble() }.toFloat(), .0001f)
+    }
 }

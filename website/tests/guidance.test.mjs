@@ -48,8 +48,8 @@ test('course suitability is bounded, ranked and evidence-based',()=>{
  assert.ok(ranked.every(c=>Number.isInteger(c.suitability)&&c.suitability>=0&&c.suitability<=100));
  assert.ok(ranked.every((c,i)=>i===0||ranked[i-1].score>=c.score));
  const scores=scoreTags(kcseQuestionsFor(answers),answers),total=Object.values(scores).reduce((a,b)=>a+b,0);
- for(const c of ranked)assert.equal(c.suitability,Math.round(100*c.score/total));
- assert.ok(rankCourses({}).every(c=>c.suitability===0));
+ for(const c of ranked)assert.equal(c.suitability,Math.round(100*c.score));
+ assert.ok(rankCourses({}).every(c=>c.suitability===null&&c.provisional));
 });
 
 test('CBE pathways and subjects have bounded evidence-based percentages',()=>{

@@ -85,6 +85,17 @@ fun CareerfitRecommendationsScreen(vm: EightFourFourViewModel, onOpen: (String) 
                 Text(summary, color = ResultInk, fontSize = 16.sp, lineHeight = 23.sp, modifier = Modifier.padding(14.dp))
             }
         }
+        results?.takeIf { it.provisional }?.let { current ->
+            Surface(color = palette.color(0xFFFFF5DB), shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+                Column(Modifier.padding(14.dp)) {
+                    Text("Provisional recommendations", color = ResultInk, fontWeight = FontWeight.Bold)
+                    Text("Outstanding: " + current.outstandingAssessments.joinToString("; "), color = ResultMuted)
+                    Text("Complete the missing assessments for a fuller picture. A separate scored aptitude test is not yet available in this version; self-reported strengths do not replace it.", color = ResultMuted)
+                    TextButton(onClick = onStart) { Text("Complete or update interest questions") }
+                    Text("Pilot weights: academic 25%, subject enjoyment 15%, interests 15%, aptitude 20%, career goals 15%, preferences 10%. Missing factors are omitted and remaining weights re-normalised.", color = ResultMuted, fontSize = 12.sp)
+                }
+            }
+        }
         val courses = results?.courses.orEmpty().sortedByDescending { it.score }.take(5)
         if (courses.isEmpty()) Button(onClick = onStart) { Text("Take Assessment") }
         courses.forEachIndexed { i, match ->
@@ -96,7 +107,7 @@ fun CareerfitRecommendationsScreen(vm: EightFourFourViewModel, onOpen: (String) 
                     Icon(if (i == 0) Icons.Outlined.MenuBook else if (i == 2) Icons.Outlined.Computer else if (i == 4) Icons.Outlined.WorkOutline else Icons.Outlined.BarChart, null, tint = ResultBlue, modifier = Modifier.padding(horizontal = 12.dp).size(28.dp))
                     Column(Modifier.weight(1f)) {
                         Text(match.course.name, color = ResultInk, fontSize = 16.sp, lineHeight = 21.sp, fontWeight = FontWeight.Bold)
-                        Text("${match.percent}% suitability", color = palette.color(0xFF008448), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                        Text(if (match.factors.any { it.key in listOf("interest", "aptitude") && it.weight > 0f }) "${match.percent}% ${if (results?.provisional == true) "provisional suitability" else "suitability"}" else "More assessment data needed", color = palette.color(0xFF008448), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                     }
                     Icon(Icons.Outlined.ChevronRight,null,tint=ResultBlue,modifier=Modifier.size(20.dp))
                 }

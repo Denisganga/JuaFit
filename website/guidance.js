@@ -31,10 +31,26 @@ export const kcseQuestions=[
 export function scoreTags(questions,answers){const scores={};for(const q of questions){const a=answers[q.id];if(!a)continue;for(const i of a.selected||[]){for(const t of q.options[i]?.tags||[])scores[t]=(scores[t]||0)+1;}const text=(a.text||'').toLowerCase();const words={coding:['computing','technology'],teaching:['education','teaching','helping'],conservation:['nature','science'],music:['music','performing'],football:['sports','fitness'],drawing:['visual','design'],business:['business','entrepreneurial']};for(const [word,tags] of Object.entries(words))if(text.includes(word))for(const t of tags)scores[t]=(scores[t]||0)+1;}return scores;}
 const fit=(tags,scores)=>tags.reduce((sum,t)=>sum+(scores[t]||0),0);
 export function rankPathways(answers){const scores=scoreTags(cbeQuestions,answers);return pathways.map((p,index)=>({...p,score:fit(p.tags,scores),order:index,tracks:p.tracks.map(t=>({...t,score:fit(t.tags,scores)})).sort((a,b)=>b.score-a.score)})).sort((a,b)=>b.score-a.score||a.order-b.order).map(p=>({...p,suitability:Object.values(scores).reduce((a,b)=>a+b,0)?Math.round(100*p.score/Object.values(scores).reduce((a,b)=>a+b,0)):0}));}
-export function rankCourses(answers,limit=5){
- const scores=scoreTags(kcseQuestionsFor(answers),answers);
- const total=Object.values(scores).reduce((sum,value)=>sum+value,0);
- return courses.map(c=>{const score=fit([...new Set(c.tags)],scores);return {...c,score,suitability:total?Math.round(100*score/total):0};}).sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name)).slice(0,limit);
+export const courseWeights=Object.freeze({academic:.25,subject:.15,interest:.15,aptitude:.20,career:.15,preference:.10});
+export function rankCourses(answers,limit=5,weights=courseWeights){
+ const keys=Object.keys(courseWeights);
+ if(keys.some(k=>!Number.isFinite(weights[k])||weights[k]<0)||keys.reduce((n,k)=>n+weights[k],0)<=0)throw Error('Invalid scoring weights');
+ const signal=id=>scoreTags(kcseQuestions.filter(q=>q.id===id),answers);
+ const buckets={subject:signal('subjects'),interest:signal('field'),career:signal('goals'),preference:signal('environment')};
+ const coverage=(tags,signals)=>{const total=Object.values(signals).reduce((a,b)=>a+b,0);return total?Math.sqrt(fit([...new Set(tags)],signals)/total):null;};
+ const index=answers.performance?.selected?.[0],academic=Number.isInteger(index)&&index>=0&&index<12?(12-index)/12:null;
+ // Aptitude must come from a separate scored assessment, never the self-report skills question.
+ const aptitude=answers.aptitude?.scores||{};
+ if(Object.values(aptitude).some(v=>!Number.isFinite(v)||v<0||v>1))throw Error('Invalid aptitude scores');
+ const names={academic:'Academic readiness (KCSE mean grade)',subject:'Subject enjoyment questions',interest:'Interest questions',aptitude:'Separate aptitude assessment (self-reported strengths do not count)',career:'Career goals',preference:'Study and environment preferences'};
+ return courses.map(c=>{
+  const values={academic,subject:coverage(c.tags,buckets.subject),interest:coverage(c.tags,buckets.interest),aptitude:aptitude[c.id]??null,career:coverage(c.tags,buckets.career),preference:coverage(c.tags,buckets.preference)};
+  const available=keys.filter(k=>values[k]!==null&&weights[k]>0),total=available.reduce((sum,k)=>sum+weights[k],0);
+  const score=total?available.reduce((sum,k)=>sum+values[k]*weights[k]/total,0):0;
+  const outstanding=keys.filter(k=>values[k]===null).map(k=>names[k]);
+  const hasSuitabilityEvidence=values.interest!==null||values.aptitude!==null;
+  return {...c,score,suitability:hasSuitabilityEvidence?Math.round(100*score):null,provisional:outstanding.length>0,outstanding,factors:available.map(k=>({key:k,score:values[k],weight:weights[k]/total}))};
+ }).sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name)).slice(0,limit);
 }
 export function selectedLabels(questions,answers){return questions.flatMap(q=>{const a=answers[q.id];return (a?.selected||[]).map(i=>q.options[i]?.label).filter(Boolean);});}
 export function courseCareers(course){return careers.filter(c=>course.careerIds.includes(c.id));}

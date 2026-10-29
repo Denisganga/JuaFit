@@ -107,7 +107,24 @@ fun CareerfitRecommendationsScreen(vm: EightFourFourViewModel, onOpen: (String) 
                     Icon(if (i == 0) Icons.Outlined.MenuBook else if (i == 2) Icons.Outlined.Computer else if (i == 4) Icons.Outlined.WorkOutline else Icons.Outlined.BarChart, null, tint = ResultBlue, modifier = Modifier.padding(horizontal = 12.dp).size(28.dp))
                     Column(Modifier.weight(1f)) {
                         Text(match.course.name, color = ResultInk, fontSize = 16.sp, lineHeight = 21.sp, fontWeight = FontWeight.Bold)
-                        Text(if (match.factors.any { it.key in listOf("interest", "aptitude") && it.weight > 0f }) "${match.percent}% ${if (results?.provisional == true) "provisional suitability" else "suitability"}" else "More assessment data needed", color = palette.color(0xFF008448), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                        val hasEvidence = match.factors.any { it.key in listOf("interest", "aptitude") && it.weight > 0f }
+                        if (hasEvidence) {
+                            val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+                            Surface(
+                                color = if (dark) Color(0xFF203F36) else Color(0xFFE2F3E8),
+                                contentColor = if (dark) Color(0xFF9DE2B8) else Color(0xFF16643D),
+                                shape = RoundedCornerShape(9.dp),
+                                modifier = Modifier.padding(top = 7.dp)
+                            ) {
+                                Text(
+                                    "${match.percent}% ${if (results?.provisional == true) "provisional suitability" else "suitability"}",
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
+                                    fontSize = 15.sp, lineHeight = 20.sp, fontWeight = FontWeight.Bold
+                                )
+                            }
+                        } else {
+                            Text("More assessment data needed", color = ResultMuted, fontSize = 14.sp, modifier = Modifier.padding(top = 7.dp))
+                        }
                     }
                     Icon(Icons.Outlined.ChevronRight,null,tint=ResultBlue,modifier=Modifier.size(20.dp))
                 }

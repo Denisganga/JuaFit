@@ -13,7 +13,7 @@ import java.util.UUID
 
 interface AuthRepository {
     val currentUser: Flow<User?>
-    suspend fun register(name: String, email: String, password: String): Result<User>
+    suspend fun register(name: String, email: String, password: String, consentAccepted: Boolean = false): Result<User>
     suspend fun login(email: String, password: String): Result<User>
     suspend fun logout()
     suspend fun setEducationSystem(system: EducationSystem): Result<User>
@@ -40,7 +40,8 @@ class LocalAuthRepository(private val store: LocalStore) : AuthRepository {
 
     private suspend fun accounts() = store.getObject<Map<String, StoredAccount>>(KEY_ACCOUNTS, emptyMap())
 
-    override suspend fun register(name: String, email: String, password: String): Result<User> {
+    override suspend fun register(name: String, email: String, password: String, consentAccepted: Boolean): Result<User> {
+        if (!consentAccepted) return Result.failure(IllegalArgumentException("Please read and agree to the data use and consent notice."))
         val key = email.trim().lowercase()
         if (name.isBlank()) return Result.failure(IllegalArgumentException("Please enter your name."))
         if (!key.contains('@') || !key.contains('.')) return Result.failure(IllegalArgumentException("Please enter a valid email address."))
@@ -48,7 +49,7 @@ class LocalAuthRepository(private val store: LocalStore) : AuthRepository {
         val all = accounts()
         if (all.containsKey(key)) return Result.failure(IllegalStateException("An account with this email already exists. Try logging in."))
         val salt = newSalt()
-        val user = User(userId = UUID.randomUUID().toString(), name = name.trim(), email = key)
+        val user = User(userId = UUID.randomUUID().toString(), name = name.trim(), email = key, dataConsentVersion = com.pathwayfit.app.core.model.DataConsent.VERSION, dataConsentAcceptedAt = System.currentTimeMillis())
         store.putObject(KEY_ACCOUNTS, all + (key to StoredAccount(user, hash(password, salt), salt)))
         store.putString(KEY_CURRENT, user.userId)
         return Result.success(user)

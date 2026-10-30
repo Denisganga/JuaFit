@@ -49,7 +49,7 @@ private val RegisterBlue = Color(0xFF0064D5)
 fun RegisterScreen(
     onBack: () -> Unit,
     onLogin: () -> Unit,
-    onRegister: (name: String, email: String, password: String, (String?) -> Unit) -> Unit,
+    onRegister: (name: String, email: String, password: String, consentAccepted: Boolean, (String?) -> Unit) -> Unit,
 ) {
     val palette = careerfitPalette
 
@@ -58,19 +58,36 @@ fun RegisterScreen(
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var confirmPassword by rememberSaveable { mutableStateOf("") }
+    var consentAccepted by rememberSaveable { mutableStateOf(false) }
+    var showConsent by rememberSaveable { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
     val focus = LocalFocusManager.current
     val submit = {
         if (!busy) {
-            if (password != confirmPassword) error = "Passwords do not match"
+            if (!consentAccepted) error = "Please read and agree to the data use and consent notice."
+            else if (password != confirmPassword) error = "Passwords do not match"
             else {
                 focus.clearFocus()
                 busy = true
-                onRegister(name, email, password) { result -> busy = false; error = result }
+                onRegister(name, email, password, consentAccepted) { result -> busy = false; error = result }
             }
         }
     }
+    if (showConsent) AlertDialog(
+        onDismissRequest = { showConsent = false },
+        title = { Text("Data use and consent") },
+        text = {
+            Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
+                Text("Notice version " + com.pathwayfit.app.core.model.DataConsent.VERSION)
+                com.pathwayfit.app.core.model.DataConsent.sections.forEach { (title, body) ->
+                    Text(title, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 14.dp))
+                    Text(body, modifier = Modifier.padding(top = 4.dp))
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = { showConsent = false }) { Text("Back to registration") } }
+    )
     BoxWithConstraints(Modifier.fillMaxSize().background(palette.background)) {
         RegistrationBackdrop(Modifier.fillMaxSize())
         val compact = maxHeight < 740.dp
@@ -98,12 +115,22 @@ fun RegisterScreen(
             RegistrationField(password, { password = it; error = null }, "Password", Icons.Outlined.Lock, password = true, enabled = !busy)
             Spacer(Modifier.height(12.dp))
             RegistrationField(confirmPassword, { confirmPassword = it; error = null }, "Confirm Password", Icons.Outlined.Lock, password = true, enabled = !busy, last = true, onDone = submit)
+            Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.Top) {
+                Checkbox(checked = consentAccepted, onCheckedChange = { consentAccepted = it; error = null }, enabled = !busy,
+                    modifier = Modifier.semantics { contentDescription = "I agree to the data use described in the consent notice" })
+                Column(Modifier.weight(1f).padding(top = 10.dp)) {
+                    Text("I have read and agree to the data use described in the consent notice.", color = RegisterInk, fontSize = 14.sp)
+                    TextButton(onClick = { showConsent = true }, contentPadding = PaddingValues(0.dp)) {
+                        Text("Read data use and consent", textDecoration = TextDecoration.Underline)
+                    }
+                }
+            }
             error?.let {
                 Spacer(Modifier.height(10.dp))
                 Text(it, color = palette.color(0xFFB3261E), fontSize = 15.sp, lineHeight = 20.sp, modifier = Modifier.fillMaxWidth())
             }
             Spacer(Modifier.height(16.dp))
-            Button(onClick = submit, enabled = !busy, modifier = Modifier.fillMaxWidth().height(52.dp),
+            Button(onClick = submit, enabled = !busy && consentAccepted, modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(13.dp), contentPadding = PaddingValues(0.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = RegisterBlue, contentColor = Color.White)) {
                 if (busy) { CircularProgressIndicator(Modifier.size(18.dp), color = Color.White, strokeWidth = 2.dp); Spacer(Modifier.width(10.dp)) }

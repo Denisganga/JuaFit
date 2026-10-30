@@ -368,7 +368,7 @@ private fun NavGraphBuilder.onboardingGraph(nav: NavHostController, session: Ses
         RegisterScreen(
             onBack = { nav.popBackStack() },
             onLogin = { nav.navigate(Routes.LOGIN) { popUpTo(Routes.WELCOME) } },
-            onRegister = { n, e, p, done -> session.register(n, e, p) { err -> done(err); if (err == null) nav.resetTo(Routes.router(true)) } },
+            onRegister = { n, e, p, consent, done -> session.register(n, e, p, consent) { err -> done(err); if (err == null) nav.resetTo(Routes.router(true)) } },
         )
     }
     composable(Routes.LOGIN) {

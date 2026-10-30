@@ -83,8 +83,8 @@ class SessionViewModel(private val c: AppContainer) : ViewModel() {
 
     val user: StateFlow<User?> = c.auth.currentUser.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    fun register(name: String, email: String, password: String, onResult: (String?) -> Unit) = viewModelScope.launch {
-        onResult(c.auth.register(name, email, password).exceptionOrNull()?.message)
+    fun register(name: String, email: String, password: String, consentAccepted: Boolean, onResult: (String?) -> Unit) = viewModelScope.launch {
+        onResult(c.auth.register(name, email, password, consentAccepted).exceptionOrNull()?.message)
     }
 
     fun login(email: String, password: String, onResult: (String?) -> Unit) = viewModelScope.launch {

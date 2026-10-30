@@ -28,6 +28,8 @@ data class User(
     val educationSystem: EducationSystem? = null,
     val subscriptionStatus: SubscriptionStatus = SubscriptionStatus.FREE,
     val createdAt: Long = System.currentTimeMillis(),
+    val dataConsentVersion: String? = null,
+    val dataConsentAcceptedAt: Long? = null,
 ) {
     val firstName: String get() = name.trim().substringBefore(' ').ifBlank { name }
 }

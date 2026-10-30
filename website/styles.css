@@ -56,3 +56,13 @@
 #guide-form{display:grid;gap:10px;margin-top:18px}#guide-form label{font-size:13px;font-weight:700}#guide-input{width:100%;min-height:90px;resize:vertical;padding:12px;border:1px solid var(--line,#b7c7dd);border-radius:14px;background:transparent;color:inherit;font:inherit}#guide-status{font-size:13px;color:inherit}.guide-reply{white-space:pre-wrap}.guide-user small{display:block;margin-top:5px}.guide-panel{max-height:85dvh;overflow:auto}
 
 .suitability-score{display:inline-block;margin-top:7px;padding:4px 9px;border-radius:8px;background:#d5f4e5;color:#09613c;font-size:14px;font-weight:800}[data-theme="dark"] .suitability-score{background:#143e35;color:#8ce7b8}
+
+/* Registration consent stays readable and keyboard-accessible in either theme. */
+.auth-consent{text-align:left;margin:16px 0;color:var(--ink);font-size:14px;line-height:1.55}
+.consent-check{display:flex;align-items:flex-start;gap:11px;cursor:pointer;padding:4px 0}
+.consent-check input{width:21px;height:21px;flex:0 0 21px;margin:3px 0 0;accent-color:var(--blue)}
+.consent-notice{margin:8px 0 0 32px}
+.consent-notice summary{cursor:pointer;color:var(--blue);text-decoration:underline;font-weight:600;padding:6px 0}
+.consent-notice>div{margin-top:9px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);max-height:320px;overflow:auto;overflow-wrap:anywhere}
+.consent-notice h3{font-size:15px;margin:16px 0 5px}.consent-notice p{font-size:14px;line-height:1.6;margin:0 0 10px}
+.auth-submit:disabled{opacity:.55;cursor:not-allowed}

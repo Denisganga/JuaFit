@@ -1,6 +1,6 @@
 import {mkdir,copyFile,cp,writeFile} from 'node:fs/promises';
 await mkdir('dist',{recursive:true});
-for(const file of ['index.html','styles.css','app.js','auth.js','preview-auth.js','guidance.js','catalog.js','response-cache.js','kuccps.js','kuccps_2025.json']) await copyFile(file,`dist/${file}`);
+for(const file of ['index.html','styles.css','app.js','auth.js','preview-auth.js','guidance.js','catalog.js','consent.js','response-cache.js','kuccps.js','kuccps_2025.json']) await copyFile(file,`dist/${file}`);
 await cp('assets','dist/assets',{recursive:true});
 const appUrl=process.env.PUBLIC_APP_URL || '';
 if(appUrl && !appUrl.startsWith('https://')) throw Error('PUBLIC_APP_URL must use HTTPS');

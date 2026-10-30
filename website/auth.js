@@ -1,12 +1,14 @@
+import {hasConsent,consentReceipt} from './consent.js';
 import config from './config.js';
 import {previewRegister,previewLogin,previewLogout,observePreview} from './preview-auth.js';
 
 export function hasFirebaseConfig(value=config.firebase){return Boolean(value?.apiKey&&value?.authDomain&&value?.projectId&&value?.appId);}
-export function registrationError({name,email,password,confirmPassword}){
+export function registrationError({name,email,password,confirmPassword,consentAccepted}){
  if(!name?.trim())return 'Please enter your full name.';
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email?.trim()||''))return 'Please enter a valid email address.';
  if(!password||password.length<8)return 'Use at least 8 characters for your password.';
  if(password!==confirmPassword)return 'Your passwords do not match.';
+ if(!hasConsent(consentAccepted))return 'Please read and agree to the data use and consent notice.';
  return '';
 }
 export function authError(error){
@@ -37,6 +39,7 @@ async function firebase(){
  return connection;
 }
 export async function registerAccount(values){
+ const receipt=consentReceipt(values.consentAccepted);
  const message=registrationError(values);if(message)throw Object.assign(new Error(message),{validation:message});
  if(!hasFirebaseConfig())return previewRegister(values);
  const {auth,sdk}=await firebase();
@@ -44,6 +47,7 @@ export async function registerAccount(values){
  // A failed display-name update must not imply that account creation failed.
  let profileUpdated=true;
  try{await sdk.updateProfile(result.user,{displayName:values.name.trim()});}catch{profileUpdated=false;}
+ try{localStorage.setItem('juafit-consent-'+result.user.uid,JSON.stringify(receipt));}catch{}
  return {user:result.user,profileUpdated};
 }
 export async function loginAccount(email,password){if(!hasFirebaseConfig())return previewLogin(email,password);const {auth,sdk}=await firebase();return sdk.signInWithEmailAndPassword(auth,email.trim(),password);}

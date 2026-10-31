@@ -76,3 +76,10 @@
 
 /* Decorative hero orbits must not create horizontal page scrolling. */
 html,body{overflow-x:clip}
+
+/* Learner photography brings the final call to action into the same visual story. */
+.photo-cta{position:relative;isolation:isolate;overflow:hidden;border-radius:30px;background:#08182c;color:#f0f5ff;border:1px solid #294260;min-height:440px;padding:58px!important;margin-block:70px}
+.photo-cta:before{content:'';position:absolute;inset:0;z-index:-2;background:url('assets/learners.png') center 38%/cover no-repeat}
+.photo-cta:after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(5,17,34,.98) 0%,rgba(5,17,34,.90) 38%,rgba(5,17,34,.35) 75%,rgba(5,17,34,.12) 100%)}
+.photo-cta .next-copy{max-width:510px}.photo-cta .eyebrow{color:#c2d5ed}.photo-cta .next-copy p{color:#d1def0}.photo-cta .next-copy h2{color:#f0f5ff}.photo-cta .next-copy h2 span{color:#6ab9ff}.photo-cta .route-art{visibility:hidden}
+@media(max-width:760px){.photo-cta{padding:32px 24px!important;min-height:460px;margin-block:45px}.photo-cta:before{background-position:64% center}.photo-cta:after{background:linear-gradient(90deg,rgba(5,17,34,.96),rgba(5,17,34,.72))}.photo-cta .route-art{display:none}.photo-cta .next-copy{max-width:100%}}

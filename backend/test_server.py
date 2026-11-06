@@ -163,7 +163,7 @@ class StreamingTests(unittest.TestCase):
         from server import course_facts
         raw={'candidates':[{'content':{'parts':[{'text':'Invented requirements'}]}}]}
         with patch('server.urlopen',return_value=io.BytesIO(json.dumps(raw).encode())):
-            result=course_facts({'course':'Computing','section':'requirements'},'test-key','test-model')
+            result=course_facts({'course':'Unverified sample','section':'progression'},'test-key','test-model')
         self.assertEqual([],result['sources'])
         self.assertNotIn('Invented',result['text'])
 
@@ -173,21 +173,42 @@ class GroundingEvidenceTests(unittest.TestCase):
         from server import course_facts
         raw={'candidates':[{'content':{'parts':[{'text':'Supported fact. Unsupported claim. Blog claim.'}]},'groundingMetadata':{'groundingChunks':[{'web':{'title':'ku.ac.ke','uri':'https://www.ku.ac.ke/programme'}},{'web':{'title':'example.com','uri':'https://example.com'}}],'groundingSupports':[{'segment':{'text':'Supported fact.'},'groundingChunkIndices':[0]},{'segment':{'text':'Blog claim.'},'groundingChunkIndices':[1]}]}}]}
         with patch('server.urlopen',return_value=io.BytesIO(json.dumps(raw).encode())):
-            result=course_facts({'course':'Computing','section':'universities'},'test-key','test-model')
+            result=course_facts({'course':'Computing','section':'progression'},'test-key','test-model')
         self.assertIn('Supported fact.',result['text'])
         self.assertNotIn('Unsupported',result['text'])
         self.assertNotIn('Blog',result['text'])
         self.assertEqual(1,len(result['sources']))
 
 class KuccpsSourceTests(unittest.TestCase):
-    def test_official_programme_requirements_do_not_need_ai_key(self):
+    def setUp(self):
+        from server import _FACT_CACHE
+        _FACT_CACHE.clear()
+
+    def test_ai_explains_reference_and_exact_requirements_are_attached(self):
         from server import course_facts
-        with patch('server.urlopen', side_effect=AssertionError('Source lookup must not call AI')):
-            result = course_facts({'course': 'Architecture', 'section': 'requirements'}, '', '')
-        self.assertIn('1063102', result['text'])
-        self.assertIn('MAT A(121):C+', result['text'])
-        self.assertNotIn('38.365', result['text'])
-        self.assertIn('2025/2026', result['text'])
+        generated = json.dumps({'explanation':'Compare the printed requirements in the reference entry below.','programmeCodes':['1063102']})
+        with patch('server.provider_text',return_value=generated) as provider:
+            result = course_facts({'course':'Architecture','section':'requirements'},'test-key','test-model')
+        request = json.loads(provider.call_args.args[0].data)
+        context = json.loads(request['contents'][0]['parts'][0]['text'])
+        self.assertTrue(context['referenceRecords'])
+        self.assertNotIn('historicalCutoffs',str(context))
+        self.assertIn('Compare the printed requirements',result['text'])
+        self.assertIn('1063102',result['text'])
+        self.assertIn('MAT A(121):C+',result['text'])
+        self.assertNotIn('38.365',result['text'])
+        self.assertTrue(any('#page=1' in x['uri'] for x in result['sources']))
+
+    def test_ai_cannot_select_an_invented_programme_code(self):
+        from server import course_facts
+        with patch('server.provider_text',return_value=json.dumps({'explanation':'A claim','programmeCodes':['invented-code']})):
+            with self.assertRaises(ValueError):
+                course_facts({'course':'Architecture','section':'universities'},'test-key','test-model')
+
+    def test_ai_explanation_requires_configuration(self):
+        from server import course_facts
+        with self.assertRaises(ValueError):
+            course_facts({'course':'Architecture','section':'requirements'},'','test-model')
 
     def test_guidance_catalogue_contains_only_real_imported_records(self):
         from server import kuccps_context

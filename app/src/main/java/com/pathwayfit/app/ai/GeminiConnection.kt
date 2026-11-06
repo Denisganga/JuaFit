@@ -49,7 +49,7 @@ object GeminiConnection {
     }
     private fun factKey(path: String, payload: JsonObject): String? {
         if (path != "course-facts") return null
-        val bytes = ("facts-v1-kuccps2025|" + BuildConfig.GEMINI_ANALYSIS_URL + "|" + payload).toByteArray()
+        val bytes = ("facts-v2-kuccps-ai|" + BuildConfig.GEMINI_ANALYSIS_URL + "|" + payload).toByteArray()
         return java.security.MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
     }
     private val factCache get() = context.getSharedPreferences("juafit_public_fact_cache", Context.MODE_PRIVATE)

@@ -27,7 +27,6 @@ fun GeminiAnalysisScreen(vm: EightFourFourViewModel, onReady: () -> Unit) {
     val palette = careerfitPalette
 
     val stage by vm.analysisStage.collectAsState()
-    val initialResults by vm.results.collectAsState()
     val preview by vm.analysisPreview.collectAsState()
     val courseNames by vm.analysisCourseNames.collectAsState()
     val error by vm.analysisError.collectAsState()
@@ -36,19 +35,6 @@ fun GeminiAnalysisScreen(vm: EightFourFourViewModel, onReady: () -> Unit) {
     val ink = palette.color(0xFF080C35)
     val muted = palette.color(0xFF405D8E)
     val blue = palette.color(0xFF0064F5)
-    if (preview.isNotBlank() || stage >= 2) {
-        Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding().padding(20.dp)) {
-            Text("Your course matches", style = MaterialTheme.typography.titleLarge)
-            androidx.compose.foundation.lazy.LazyColumn(Modifier.weight(1f)) {
-                item { Text(preview.ifBlank { "Your initial matches are ready. JuaGuide is personalizing the explanations…" }, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(vertical = 16.dp)) }
-                val visibleNames = courseNames.ifEmpty { initialResults?.courses.orEmpty().take(5).map { it.course.name } }
-                items(visibleNames.size) { i -> Text("${i+1}. ${visibleNames[i]}", modifier = Modifier.padding(vertical = 10.dp)) }
-                item { Text("Preparing the remaining details…", style = MaterialTheme.typography.bodyMedium) }
-                if (error != null) item { Text(error!!); Button(onClick = { vm.analyzeAnswers() }) { Text("Retry") } }
-            }
-        }
-        return
-    }
     val context = LocalContext.current
     val logo = remember { BitmapFactory.decodeResource(context.resources, R.drawable.juafit_emblem).asImageBitmap() }
     val robot = remember { BitmapFactory.decodeResource(context.resources, R.drawable.analysis_reference).asImageBitmap() }
@@ -83,6 +69,15 @@ fun GeminiAnalysisScreen(vm: EightFourFourViewModel, onReady: () -> Unit) {
                 if (stage < 4 && error == null) LinearProgressIndicator(modifier = Modifier.weight(1f).height(11.dp).clip(CircleShape), color = blue, trackColor = palette.color(0xFFE3F0FF))
                 else LinearProgressIndicator(progress = { if (stage == 4) 1f else stage / 4f }, modifier = Modifier.weight(1f).height(11.dp).clip(CircleShape), color = blue, trackColor = palette.color(0xFFE3F0FF), drawStopIndicator = {})
                 Text(if (stage == 4) "100%" else "${stage.coerceAtMost(3)}/4", color = ink, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 12.dp))
+            }
+            if (preview.isNotBlank() || courseNames.isNotEmpty()) {
+                Surface(color = palette.color(0xFFF2F9FE), shape = RoundedCornerShape(15.dp), modifier = Modifier.fillMaxWidth().padding(top = 14.dp)) {
+                    Column(Modifier.padding(16.dp)) {
+                        Text("AI analysis in progress", color = ink, fontWeight = FontWeight.Bold)
+                        if (preview.isNotBlank()) Text(preview, color = muted, modifier = Modifier.padding(top = 8.dp))
+                        courseNames.forEach { name -> Text(name, color = ink, modifier = Modifier.padding(top = 6.dp)) }
+                    }
+                }
             }
             Spacer(Modifier.height(14.dp))
             Surface(color = palette.color(0xFFF2F9FE), shape = RoundedCornerShape(15.dp), modifier = Modifier.fillMaxWidth()) {

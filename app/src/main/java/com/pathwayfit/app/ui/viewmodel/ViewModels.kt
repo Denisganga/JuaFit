@@ -324,6 +324,7 @@ class EightFourFourViewModel(private val c: AppContainer) : ViewModel() {
             analysisStage.value = 4
         } catch (error: Exception) {
             if (error is kotlinx.coroutines.CancellationException) throw error
+            analysisPreview.value = ""; analysisCourseNames.value = emptyList(); analyzedCourses.value = null
             analysisError.value = error.message ?: "Analysis could not finish. Please retry."
         } finally { analysisRunning = false }
     }
@@ -335,7 +336,7 @@ class EightFourFourViewModel(private val c: AppContainer) : ViewModel() {
             else c.eightFourFourEngine.recommend(EightFourFourEngineInput(EightFourFourAssessmentBank.withPerformance(p, a), assessment.questions, a, d, car))
         }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
-    val results: StateFlow<CourseRecommendationSet?> = combine(localResults, analyzedCourses) { local, ai -> ai ?: local }
+    val results: StateFlow<CourseRecommendationSet?> = combine(localResults, analyzedCourses) { _, ai -> ai }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     /** Selected pair for the course comparison screen. */

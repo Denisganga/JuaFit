@@ -42,10 +42,9 @@ class GeminiAssessmentService {
                 put("careers", buildJsonArray { m.careers.forEach { add(it.name) } })
             }) } })
         }
-        if (JuaGuideDemo.enabled) return@withContext JuaGuideDemo.analyze(questions, answers, candidates)
         val result = Json.decodeFromString<GeminiAssessmentResult>(GeminiConnection.stream("analyze", payload, onProgress).toString())
             val validIds = candidates.courses.map { it.course.id }.toSet()
-            check(result.summary.isNotBlank() && result.courseIds.isNotEmpty() && result.courseIds.distinct().size == result.courseIds.size && result.courseIds.all { it in validIds }) { "JuaGuide returned an invalid recommendation. Please retry." }
+            check(result.summary.isNotBlank() && result.courseIds.size == 5 && result.courseIds.distinct().size == result.courseIds.size && result.courseIds.all { it in validIds }) { "JuaGuide returned an invalid recommendation. Please retry." }
             check(result.insights.map { it.courseId }.toSet() == result.courseIds.toSet() && result.insights.size == result.courseIds.size) { "JuaGuide returned incomplete course explanations. Please retry." }
             result
 

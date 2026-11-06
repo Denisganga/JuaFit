@@ -74,6 +74,7 @@ fun CareerfitRecommendationsScreen(vm: EightFourFourViewModel, onOpen: (String) 
 
     val results by vm.results.collectAsState()
     val ai by vm.geminiResult.collectAsState()
+    if (ai == null || results == null) { GeminiAnalysisScreen(vm, onReady = {}); return }
     ResultFrame {
         Text("Your Personalized\nRecommendations", color = ResultInk, fontSize = 24.sp, lineHeight = 29.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         if (com.pathwayfit.app.ai.JuaGuideDemo.enabled) Text("AI Preview • Personalized guidance", color = ResultMuted, fontSize = 12.sp)

@@ -1,5 +1,5 @@
 // Cache only completed results; conversations always go to JuaGuide.
-const VERSION='juafit-ai-cache-v3-kuccps-ai';
+const VERSION='juafit-ai-cache-v4-ai-only';
 export async function cacheKey(path,payload,userId=''){
  if(path!=='/api/course-facts' && !(path==='/api/analyze'&&userId))return null;
  const bytes=new TextEncoder().encode(JSON.stringify([VERSION,path,userId,payload]));

@@ -243,3 +243,20 @@ class PublicFactCacheTests(unittest.TestCase):
         cached=cached_course_facts(provider)
         for _ in range(2): cached({'course':'Missing','section':'requirements'},'key','model')
         self.assertEqual(2,provider.call_count)
+
+
+class AssessmentReferenceTests(unittest.TestCase):
+    def test_post_assessment_analysis_sends_official_reference_with_learner_answers(self):
+        from server import analyze
+        payload = {'profile':{'meanGrade':'B'},'answers':[{'question':'Interest','selectedAnswers':['Technology']} for _ in range(9)],'courses':[{'id':'c_cs','name':'Computer Science'}]}
+        insight={'courseId':'c_cs','overview':'Overview','reasons':['Technology'],'potential':'Explore','quote':'Explore','furtherEducation':['Study']*3,'employmentSectors':['Sector']*5,'careerProgression':['Step']*4}
+        generated=json.dumps({'summary':'Based on your answers','courseIds':['c_cs'],'insights':[insight]})
+        with patch('server.provider_text',return_value=generated) as provider:
+            analyze(payload,'test-key','test-model')
+        request=json.loads(provider.call_args.args[0].data)
+        evidence=json.loads(request['contents'][0]['parts'][0]['text'])
+        self.assertEqual(9,len(evidence['answers']))
+        reference=evidence['kuccpsReference']
+        self.assertEqual('2025/2026',reference['edition'])
+        self.assertEqual(['Computer Science'],list(reference['examplesByCourseFamily']))
+        self.assertTrue(all(row['code'] and row['page'] for row in reference['examplesByCourseFamily']['Computer Science']))

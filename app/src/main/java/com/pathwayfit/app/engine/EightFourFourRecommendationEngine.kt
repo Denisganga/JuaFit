@@ -62,6 +62,10 @@ data class CourseRecommendationSet(
     val outstandingAssessments: List<String> = emptyList(),
     val hasSuitabilityEvidence: Boolean = false,
 ) {
+    /** AI selects the course set; configured suitability scores order that set. */
+    fun shortlist(selectedIds: Collection<String>? = null): List<CourseMatch> =
+        courses.filter { selectedIds == null || it.course.id in selectedIds }.sortedByDescending { it.score }.take(5)
+
     val provisional: Boolean get() = outstandingAssessments.isNotEmpty()
     val top: CourseMatch? get() = courses.firstOrNull()
 }

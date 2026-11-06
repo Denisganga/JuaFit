@@ -111,4 +111,14 @@ class RecommendationEngineTest {
         assertEquals(0f, cs.factor("aptitude")!!.score)
         assertEquals(1f, cs.factors.sumOf { it.weight.toDouble() }.toFloat(), .0001f)
     }
+
+    @Test fun finalShortlistUsesAiSelectedCoursesInsteadOfReplacingThemWithLocalTopFive() {
+        val input = EightFourFourEngineInput(UniversityProfile(meanGrade = KcseGrade.B), EightFourFourAssessmentBank.assessment.questions,
+            listOf(AssessmentAnswer("efe_v2_q5", setOf("3"))), uni, careers)
+        val set = EightFourFourRecommendationEngine().recommend(input)
+        val selected = set.courses.takeLast(5).map { it.course.id }
+        val final = set.shortlist(selected)
+        assertEquals(selected.toSet(), final.map { it.course.id }.toSet())
+        assertTrue(final.zipWithNext().all { (a,b) -> a.score >= b.score })
+    }
 }

@@ -85,6 +85,14 @@ fun CareerfitRecommendationsScreen(vm: EightFourFourViewModel, onOpen: (String) 
                 Text(summary, color = ResultInk, fontSize = 16.sp, lineHeight = 23.sp, modifier = Modifier.padding(14.dp))
             }
         }
+        if (ai != null) {
+            val referenceContext = androidx.compose.ui.platform.LocalContext.current
+            Text("AI analysis uses your answers and KUCCPS 2025/2026 programme records.", color = ResultMuted, fontSize = 13.sp)
+            TextButton(onClick = { referenceContext.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW,
+                android.net.Uri.parse("https://juafit-website.vercel.app/assets/kuccps-degree-programmes-2025.pdf"))) }) {
+                Text("View the KUCCPS reference")
+            }
+        }
         results?.takeIf { it.provisional }?.let { current ->
             Surface(color = palette.color(0xFFFFF5DB), shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
                 Column(Modifier.padding(14.dp)) {
@@ -96,7 +104,7 @@ fun CareerfitRecommendationsScreen(vm: EightFourFourViewModel, onOpen: (String) 
                 }
             }
         }
-        val courses = results?.courses.orEmpty().sortedByDescending { it.score }.take(5)
+        val courses = results?.shortlist(ai?.courseIds).orEmpty()
         if (courses.isEmpty()) Button(onClick = onStart) { Text("Take Assessment") }
         courses.forEachIndexed { i, match ->
             Surface(onClick = { onOpen(match.course.id) }, color = palette.color(0xFFFAFDFF), shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp,palette.color(0xFFDEEBFB)), modifier = Modifier.fillMaxWidth().padding(bottom = 9.dp)) {

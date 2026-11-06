@@ -79,32 +79,7 @@ fun CareerfitRecommendationsScreen(vm: EightFourFourViewModel, onOpen: (String) 
         Text("Your Personalized\nRecommendations", color = ResultInk, fontSize = 24.sp, lineHeight = 29.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
         if (com.pathwayfit.app.ai.JuaGuideDemo.enabled) Text("AI Preview • Personalized guidance", color = ResultMuted, fontSize = 12.sp)
         Spacer(Modifier.height(9.dp))
-        Text("Based on your profile and assessment, here are your top 5 courses, ranked by suitability.", color = ResultMuted, fontSize = 15.sp, lineHeight = 21.sp, textAlign = TextAlign.Center)
         Spacer(Modifier.height(15.dp))
-        ai?.summary?.takeIf { it.isNotBlank() }?.let { summary ->
-            Surface(color = palette.color(0xFFEAF4FF), shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 14.dp)) {
-                Text(summary, color = ResultInk, fontSize = 16.sp, lineHeight = 23.sp, modifier = Modifier.padding(14.dp))
-            }
-        }
-        if (ai != null) {
-            val referenceContext = androidx.compose.ui.platform.LocalContext.current
-            Text("AI analysis uses your answers and KUCCPS 2025/2026 programme records.", color = ResultMuted, fontSize = 13.sp)
-            TextButton(onClick = { referenceContext.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW,
-                android.net.Uri.parse("https://juafit-website.vercel.app/assets/kuccps-degree-programmes-2025.pdf"))) }) {
-                Text("View the KUCCPS reference")
-            }
-        }
-        results?.takeIf { it.provisional }?.let { current ->
-            Surface(color = palette.color(0xFFFFF5DB), shape = RoundedCornerShape(14.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
-                Column(Modifier.padding(14.dp)) {
-                    Text("Provisional recommendations", color = ResultInk, fontWeight = FontWeight.Bold)
-                    Text("Outstanding: " + current.outstandingAssessments.joinToString("; "), color = ResultMuted)
-                    Text("Complete the missing assessments for a fuller picture. A separate scored aptitude test is not yet available in this version; self-reported strengths do not replace it.", color = ResultMuted)
-                    TextButton(onClick = onStart) { Text("Complete or update interest questions") }
-                    Text("Pilot weights: academic 25%, subject enjoyment 15%, interests 15%, aptitude 20%, career goals 15%, preferences 10%. Missing factors are omitted and remaining weights re-normalised.", color = ResultMuted, fontSize = 12.sp)
-                }
-            }
-        }
         val courses = results?.shortlist(ai?.courseIds).orEmpty()
         if (courses.isEmpty()) Button(onClick = onStart) { Text("Take Assessment") }
         courses.forEachIndexed { i, match ->
@@ -139,13 +114,7 @@ fun CareerfitRecommendationsScreen(vm: EightFourFourViewModel, onOpen: (String) 
                 }
             }
         }
-        Surface(color=palette.color(0xFFE9F5FF),shape=RoundedCornerShape(14.dp)) {
-            Row(Modifier.padding(14.dp),verticalAlignment=Alignment.CenterVertically) {
-                Icon(Icons.Outlined.EmojiEvents,null,tint=ResultBlue,modifier=Modifier.size(32.dp))
-                Text("Suitability reflects your academic profile, interests and strengths. It is not an admission probability.",color=ResultMuted,fontSize = 13.sp,lineHeight = 18.sp,modifier=Modifier.padding(start=14.dp))
-            }
-        }
-        if (ai != null) Text("Personalized by JuaGuide. Recommendations are ranked guidance, not admission guarantees.",color=ResultMuted,fontSize = 11.sp,modifier=Modifier.padding(top=8.dp))
+
     }
 }
 
@@ -189,6 +158,12 @@ fun CareerfitCourseScreen(vm: EightFourFourViewModel, courseId: String, onBack: 
     ResultFrame(onBack = back) {
         if (match == null) { Text("This recommendation is unavailable. Please repeat the assessment."); return@ResultFrame }
         val insight = ai?.insights?.firstOrNull { it.courseId == courseId }
+        if (results?.provisional == true) {
+            var showStatus by remember { mutableStateOf(false) }
+            TextButton(onClick = { showStatus = !showStatus }) { Text("Assessment status") }
+            if (showStatus) Text("Provisional. Outstanding: " + results?.outstandingAssessments.orEmpty().joinToString("; "), color = ResultMuted, fontSize = 13.sp)
+        }
+
         val sections = listOf("Overview", "Why it’s recommended", "Entry requirements", "Universities offering it", "Career progression", "Further education opportunities", "Relevant competencies", "Potential employment sectors")
         val subtitles = listOf("What the course involves", "How your answers match", "Minimum grades and subjects", "Where you can study", "Job opportunities after graduation", "What you can study next", "Key skills you’ll develop", "Industries that hire graduates")
         val icons = listOf(Icons.AutoMirrored.Outlined.Assignment,Icons.Outlined.TrackChanges,Icons.Outlined.ContentPaste,Icons.Outlined.AccountBalance,Icons.Outlined.WorkOutline,Icons.Outlined.School,Icons.Outlined.BarChart,Icons.Outlined.Groups)

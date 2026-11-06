@@ -58,10 +58,10 @@ fun GeminiAnalysisScreen(vm: EightFourFourViewModel, onReady: () -> Unit) {
                 }
             }
             Spacer(Modifier.height(24.dp))
-            Text("Analyzing Your Answers", color = ink, fontSize = 24.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Text("Finding Your Best Courses", color = ink, fontSize = 24.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
             if (com.pathwayfit.app.ai.JuaGuideDemo.enabled) Text("AI Preview • Reviewing your answers", color = muted, fontSize = 12.sp)
             Spacer(Modifier.height(7.dp))
-            Text("Our AI is carefully reviewing your profile and assessment results to find the best career and course recommendations for you.", color = muted, fontSize = 15.sp, lineHeight = 20.sp, textAlign = TextAlign.Center)
+            Text("Our AI is reviewing your answers and comparing courses using the KUCCPS programme reference.", color = muted, fontSize = 15.sp, lineHeight = 20.sp, textAlign = TextAlign.Center)
             Spacer(Modifier.height(9.dp))
             Canvas(Modifier.fillMaxWidth().aspectRatio(610f/275f)) { drawImage(robot, srcOffset = IntOffset(50,380), srcSize = IntSize(610,275), dstSize = IntSize(size.width.toInt(),size.height.toInt())) }
             Spacer(Modifier.height(10.dp))
